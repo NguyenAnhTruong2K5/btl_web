@@ -1,4 +1,4 @@
-package com.example.btl_web.Repositories;
+package com.example.btl_web.Repository;
 
 import com.example.btl_web.Model.User;
 import org.springframework.data.jpa.repository.JpaRepository;

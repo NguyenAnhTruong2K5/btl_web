@@ -1,5 +1,5 @@
 package com.example.btl_web.Model;
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +17,12 @@ public class Cinema {
     private String cinemaName;
     private String address;
     private String city;
+    private String phone;
+    private String brand;
+    private Double rating;
 
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 }

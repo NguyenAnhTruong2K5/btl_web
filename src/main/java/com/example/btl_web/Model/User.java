@@ -1,6 +1,6 @@
 package com.example.btl_web.Model;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,6 +32,9 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;
+
+    @Column(length = 255)
+    private String avatar;
 
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

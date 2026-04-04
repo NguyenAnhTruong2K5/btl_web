@@ -1,5 +1,5 @@
 package com.example.btl_web.Model;
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,8 +22,12 @@ public class Movie {
     private String description;
 
     private Integer duration;
+
+    @Column(name= "poster", columnDefinition = "TEXT")
     private String poster;
+
     private String trailer;
+
     private LocalDate releaseDate;
     private String status;
 
