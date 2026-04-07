@@ -18,7 +18,9 @@ public class Discount {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer discountId;
 
+    @Column(name = "code", unique = true)
     private String code;
+
     private Integer discountPercent;
     private LocalDate startDate;
     private LocalDate endDate;

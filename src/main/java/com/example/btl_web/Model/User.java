@@ -26,7 +26,10 @@ public class User {
     private String password;
 
     private String fullName;
+    @Column(name = "email", unique = true)
     private String email;
+
+    @Column(name = "phone", unique = true)
     private String phone;
 
     @ManyToOne

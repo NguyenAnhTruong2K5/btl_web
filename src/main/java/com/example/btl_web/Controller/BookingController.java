@@ -3,9 +3,7 @@ package com.example.btl_web.Controller;
 import com.example.btl_web.DTO.BookingDTO;
 import com.example.btl_web.DTO.CinemaShowtimeDTO;
 import com.example.btl_web.Model.*;
-import com.example.btl_web.Repository.CinemaRepo;
-import com.example.btl_web.Repository.SeatRepo;
-import com.example.btl_web.Repository.ShowtimeRepo;
+import com.example.btl_web.Repository.*;
 import com.example.btl_web.Service.RoomService;
 import com.example.btl_web.Service.SeatService;
 import javax.servlet.http.HttpSession;
@@ -25,6 +23,11 @@ public class BookingController {
     private final CinemaRepo cinemaRepo;
     private final ShowtimeRepo showtimeRepo;
     private final SeatRepo seatRepo;
+    private final UserRepo userRepo;
+    private final BookingRepo bookingRepo;
+    private final BookingSeatRepo bookingSeatRepo;
+    private final BookingHistoryRepo bookingHistoryRepo;
+
     private final SeatService seatService;
     private final RoomService roomService;
 
@@ -66,14 +69,14 @@ public class BookingController {
 
         if (availableRoomList.isEmpty()) {
             model.addAttribute("msg", "Không còn phòng trống!");
-            return "forward:/booking-cinema-showtime-room.jsp"; // Mở trang chọn rạp và giờ chiếu
+            return "booking-cinema-showtime-room"; // Mở trang chọn rạp và giờ chiếu
         }
 
         model.addAttribute("showtime_list", availableRoomList);
         CinemaShowtimeDTO cinemaShowtimeDTO = new CinemaShowtimeDTO();
         model.addAttribute("cinema_showtime", cinemaShowtimeDTO);
 
-        return "forward:/booking-cinema-showtime-room.jsp"; // Mở trang chọn rạp và giờ chiếu
+        return "booking-cinema-showtime-room"; // Mở trang chọn rạp và giờ chiếu
     }
 
     @PostMapping("/cinema_showtime_room")
@@ -125,12 +128,12 @@ public class BookingController {
             model.addAttribute("seat_list", seatList);
             model.addAttribute("available_seat_list", availableSeats);
             model.addAttribute("selected_seat_list", selectedSeatList);
-            return "forward:/booking-seat.jsp";
+            return "booking-seat";
         }
 
         model.addAttribute("seat_list", seatList);
         model.addAttribute("available_seat_list", availableSeats);
-        return "forward:/booking-seat.jsp";
+        return "booking-seat";
     }
 
     @PostMapping("/seat")
@@ -142,7 +145,7 @@ public class BookingController {
 
         if (currSeatIdList.isEmpty()) {
             model.addAttribute("error_msg", "Vui lòng chọn ghế!");
-            return "forward:/booking-seat.jsp";
+            return "booking-seat";
         }
 
         for (Integer seatId : currSeatIdList) {
@@ -160,38 +163,53 @@ public class BookingController {
 
         session.setAttribute("pre_selected_seat", currSeatIdList);
         currBooking.setSeatIdList(currSeatIdList);
-        return "redirect:/booking/confirm";
-    }
-
-    @GetMapping("/confirm")
-    public String openBookingConfirmPage(HttpSession session, Model model) {
-        BookingDTO currBooking = (BookingDTO) session.getAttribute("current_booking");
-        if (currBooking == null) {
-            return "redirect:/"; // Trang chủ người dùng
-        }
-
-        model.addAttribute("curr_booking", currBooking);
-        return "forward:/booking-confirm.jsp";
-    }
-
-    @PostMapping("/confirm")
-    public String processBookingConfirm(HttpSession session) {
-        BookingDTO currBooking = (BookingDTO) session.getAttribute("current_booking");
-        if (currBooking == null) {
-            return "redirect:/"; // Trang chủ người dùng
-        }
 
         Integer userId = currBooking.getUserId();
+        User user = userRepo.findById(userId).orElse(null); assert user != null;
+
         Integer movieId = currBooking.getMovieId();
         Integer roomId = currBooking.getRoomId();
+
         Integer showtimeId = currBooking.getShowTimeId();
+        Showtime showtime = showtimeRepo.findById(showtimeId).orElse(null); assert showtime != null;
+
         Integer cinemaId = currBooking.getCinemaId();
         List<Integer> seatIdList = currBooking.getSeatIdList();
-        return "redirect:/booking/payment";
+
+        Booking booking = new Booking();
+        booking.setUser(user);
+        booking.setShowtime(showtime);
+        booking.setTotalPrice(showtime.getPrice());
+        bookingRepo.save(booking);
+
+        for (Integer seatId : seatIdList) {
+            BookingSeat bookingSeat = new BookingSeat();
+            bookingSeat.setBooking(booking);
+            bookingSeat.setSeat(seatRepo.findById(seatId).orElse(null));
+            bookingSeatRepo.save(bookingSeat);
+        }
+
+        BookingHistory bookingHistory = new BookingHistory();
+        bookingHistory.setBooking(booking);
+        bookingHistoryRepo.save(bookingHistory);
+        currBooking.setBookingId(booking.getBookingId());
+
+        return "redirect:/ticket/" + currBooking.getBookingId() + "/detail";
     }
 
     @GetMapping("/cancel")
-    public String cancelTheBooking(HttpSession session) {
+    public String cancelTheBooking(HttpSession session, RedirectAttributes redirectAttributes) {
+        BookingDTO currBooking = (BookingDTO) session.getAttribute("current_booking");
+        if (currBooking == null) {
+            return "redirect:/"; // Trang chủ người dùng
+        }
+
+        Booking booking = bookingRepo.findById(currBooking.getBookingId()).orElse(null);
+        if (booking == null) {
+            return "redirect:/";
+        }
+
+        bookingRepo.delete(booking);
         return "redirect:/";
     }
 }

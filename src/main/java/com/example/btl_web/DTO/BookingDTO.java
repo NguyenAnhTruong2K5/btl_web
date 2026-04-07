@@ -11,6 +11,7 @@ import java.util.List;
 @RequiredArgsConstructor
 
 public class BookingDTO {
+    private Integer bookingId;
     private Integer movieId;
     private Integer roomId;
     private Integer userId;

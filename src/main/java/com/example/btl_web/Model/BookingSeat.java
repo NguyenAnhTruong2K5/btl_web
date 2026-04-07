@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,6 +19,7 @@ public class BookingSeat {
 
     @ManyToOne
     @JoinColumn(name = "booking_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Booking booking;
 
     @ManyToOne

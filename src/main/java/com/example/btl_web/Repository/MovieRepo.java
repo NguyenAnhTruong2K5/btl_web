@@ -8,8 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface MovieRepository extends JpaRepository<Movie, Integer> {
-
+public interface MovieRepo extends JpaRepository<Movie, Integer> {
     @Query("SELECT DISTINCT m FROM Movie m WHERE m.status = :status")
     List<Movie> findByStatus(String status);
 }
