@@ -51,14 +51,17 @@
 
                             <div class="hidden md:flex items-center space-x-8 font-headline text-sm">
 
-                                <a class="${currentUri == '/admin' ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
+                                <a class="${pageContext.request.requestURI.contains('admin') && !pageContext.request.requestURI.contains('admins') ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
                                     href="/superAdmin">Dashboard</a>
 
-                                <a class="${currentUri == '/admin/theaters' ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
+                                <a class="${pageContext.request.requestURI.contains('theaters') ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
                                     href="/superAdmin/theaters">Quản lý rạp</a>
 
-                                <a class="${currentUri == '/admin/users' ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
+                                <a class="${pageContext.request.requestURI.contains('users') && !pageContext.request.requestURI.contains('admins') ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
                                     href="/superAdmin/users">Quản lý người dùng</a>
+
+                                <a class="${pageContext.request.requestURI.contains('admins') ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
+                                    href="/superAdmin/admins">Quản lý admin</a>
 
                                 <a class="${currentUri == '/admin/reports' ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
                                     href="/superAdmin/reports">Báo cáo</a>
@@ -79,45 +82,116 @@
 
                     <!-- MAIN -->
                     <main class="pt-28 px-6">
-                        <div class="max-w-7xl mx-auto space-y-8">
-                            <h1 class="text-2xl font-bold mb-6">Thông tin rạp</h1>
-                            
-                            <form method="post" action="/superAdmin/theaters/save" class="space-y-4">
-                            
-                                <input type="hidden" name="cinemaId" value="${cinema.cinemaId}" />
-                            
-                                <div>
-                                    <label>Tên rạp</label>
-                                    <input type="text" name="cinemaName" value="${cinema.cinemaName}" class="w-full border rounded p-2" />
+                        <div class="max-w-2xl mx-auto">
+
+                            <!-- ERROR MESSAGE -->
+                            <c:if test="${not empty error}">
+                                <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
+                                    ${error}
                                 </div>
-                            
-                                <div>
-                                    <label>Thành phố</label>
-                                    <input type="text" name="city" value="${cinema.city}" class="w-full border rounded p-2" />
-                                </div>
-                            
-                                <div>
-                                    <label>Địa chỉ</label>
-                                    <input type="text" name="address" value="${cinema.address}" class="w-full border rounded p-2" />
-                                </div>
-                                <div>
-                                    <label>Hãng</label>
-                                    <input type="text" name="brand" value="${cinema.brand}" class="w-full border rounded p-2" />
-                                </div>
-                                <div>
-                                    <label>Ảnh</label>
-                                    <input type="text" name="imageUrl" value="${cinema.imageUrl}" class="w-full border rounded p-2" />
-                                </div>
-                                <div>
-                                    <label>Số điện thoại</label>
-                                    <input type="text" name="phone" value="${cinema.phone}" class="w-full border rounded p-2" />
-                                </div>
-                                <input type="hidden" name="rating" value="${cinema.rating}" />
-                                <button class="bg-red-600 text-white px-6 py-2 rounded">
-                                    Lưu
-                                </button>
-                            
-                            </form>
+                            </c:if>
+
+                            <!-- HEADER -->
+                            <div class="mb-8">
+                                <h1 class="text-3xl font-bold mb-2">
+                                    <c:choose>
+                                        <c:when test="${not empty cinema.cinemaId}">
+                                            Sửa Thông Tin Rạp
+                                        </c:when>
+                                        <c:otherwise>
+                                            Thêm Rạp Mới
+                                        </c:otherwise>
+                                    </c:choose>
+                                </h1>
+                            </div>
+
+                            <!-- FORM -->
+                            <div class="bg-white rounded-xl shadow p-8">
+                                <form method="post" action="/superAdmin/theaters/save" class="space-y-6">
+                                
+                                    <input type="hidden" name="cinemaId" value="${cinema.cinemaId}" />
+                                    <input type="hidden" name="rating" value="${cinema.rating}" />
+                                
+                                    <!-- CINEMA NAME -->
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-900 mb-2">
+                                            Tên Rạp <span class="text-red-600">*</span>
+                                        </label>
+                                        <input type="text" name="cinemaName" value="${cinema.cinemaName}" 
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600" 
+                                            required />
+                                    </div>
+                                
+                                    <!-- BRAND -->
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-900 mb-2">
+                                            Hãng <span class="text-red-600">*</span>
+                                        </label>
+                                        <input type="text" name="brand" value="${cinema.brand}" 
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600" 
+                                            required />
+                                    </div>
+                                
+                                    <!-- CITY -->
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-900 mb-2">
+                                            Thành Phố <span class="text-red-600">*</span>
+                                        </label>
+                                        <input type="text" name="city" value="${cinema.city}" 
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600" 
+                                            required />
+                                    </div>
+                                
+                                    <!-- ADDRESS -->
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-900 mb-2">
+                                            Địa Chỉ <span class="text-red-600">*</span>
+                                        </label>
+                                        <input type="text" name="address" value="${cinema.address}" 
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600" 
+                                            required />
+                                    </div>
+                                
+                                    <!-- PHONE -->
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-900 mb-2">
+                                            Số Điện Thoại <span class="text-red-600">*</span>
+                                        </label>
+                                        <input type="text" name="phone" value="${cinema.phone}" 
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600" 
+                                            required />
+                                    </div>
+                                
+                                    <!-- IMAGE URL -->
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-900 mb-2">
+                                            Ảnh (URL) <span class="text-red-600">*</span>
+                                        </label>
+                                        <input type="text" name="imageUrl" value="${cinema.imageUrl}" 
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600" 
+                                            required />
+                                    </div>
+                                
+                                    <!-- BUTTONS -->
+                                    <div class="flex justify-between items-center pt-6 border-t">
+                                        <a href="/superAdmin/theaters" class="text-gray-600 hover:text-gray-900">
+                                            ← Quay Lại
+                                        </a>
+                                        <button type="submit" class="btn-primary bg-red-600 text-white hover:bg-red-700">
+                                            <c:choose>
+                                                <c:when test="${not empty cinema.cinemaId}">
+                                                    Cập Nhật
+                                                </c:when>
+                                                <c:otherwise>
+                                                    Thêm Mới
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </button>
+                                    </div>
+                                
+                                </form>
+                            </div>
+
                         </div>
                     </main>
 
