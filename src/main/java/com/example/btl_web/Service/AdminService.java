@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.cinemavn.model.Admin;
 import com.cinemavn.model.Cinema;
@@ -125,6 +126,7 @@ public class AdminService {
     /**
      * Delete admin by ID
      */
+    @Transactional
     public void delete(@NonNull Integer id) {
         adminRepository.deleteById(id);
     }
@@ -132,6 +134,7 @@ public class AdminService {
     /**
      * Delete admin by user and cinema
      */
+    @Transactional
     public void deleteAdminFromCinema(@NonNull Long userId, @NonNull Integer cinemaId) {
         Optional<Admin> admin = adminRepository.findByUserUserIdAndCinemaCinemaId(userId, cinemaId);
         admin.ifPresent(adminRepository::delete);
@@ -142,5 +145,23 @@ public class AdminService {
      */
     public long countAdminsForCinema(@NonNull Integer cinemaId) {
         return adminRepository.findByCinemaCinemaId(cinemaId).size();
+    }
+
+    /**
+     * Delete all admin associations for a user
+     * Used when downgrading a user from CINEMA_ADMIN to USER role
+     */
+    @Transactional
+    public void deleteAllAdminsForUser(@NonNull Long userId) {
+        adminRepository.deleteByUserUserId(userId);
+    }
+
+    /**
+     * Delete all admin associations for a cinema
+     * Used when deleting a cinema to remove all admin records first
+     */
+    @Transactional
+    public void deleteAllAdminsForCinema(@NonNull Integer cinemaId) {
+        adminRepository.deleteByCinemaCinemaId(cinemaId);
     }
 }

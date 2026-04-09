@@ -1,57 +1,63 @@
-package com.example.btl_web.Controller;
+package com.cinemavn.controller;
 
-import com.example.btl_web.Model.Cinema;
-import com.example.btl_web.Model.Movie;
-import com.example.btl_web.Model.Role;
-import com.example.btl_web.Model.User;
-import com.example.btl_web.Repository.CinemaRepo;
-import com.example.btl_web.Repository.MovieRepo;
-import com.example.btl_web.Repository.RoleRepo;
-import com.example.btl_web.Repository.UserRepo;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import lombok.RequiredArgsConstructor;
+import javax.servlet.http.HttpSession;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import javax.servlet.http.HttpSession;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.cinemavn.model.Cinema;
+import com.cinemavn.model.Movie;
+import com.cinemavn.model.Role;
+import com.cinemavn.model.User;
+import com.cinemavn.repository.CinemaRepository;
+import com.cinemavn.repository.MovieRepository;
+import com.cinemavn.repository.RoleRepository;
+import com.cinemavn.repository.UserRepository;
 
 @Controller
-@RequiredArgsConstructor
-@RequestMapping("/")
 public class LoginController {
-    private final UserRepo userRepo;
-    private final RoleRepo roleRepo;
-    private final MovieRepo movieRepo;
-    private final CinemaRepo cinemaRepo;
+
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final MovieRepository movieRepository;
+    private final CinemaRepository cinemaRepository;
+
+    public LoginController(UserRepository userRepository, RoleRepository roleRepository, MovieRepository movieRepository, CinemaRepository cinemaRepository) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.movieRepository = movieRepository;
+        this.cinemaRepository = cinemaRepository;
+    }
 
     @GetMapping("/")
-    public String indexPage(Model model, HttpSession session) {
-        List<Movie> nowShowing = movieRepo.findByStatus("Đang chiếu");
-        List<Movie> uniqueNowShowing = new ArrayList<>(nowShowing.stream()
+    public String indexPage(Model model) {
+        List<Movie> nowShowing = movieRepository.findByStatus("Đang chiếu");
+        List<Movie> uniqueNowShowing = nowShowing.stream()
                 .collect(Collectors.toMap(Movie::getTitle, m -> m, (existing, replacement) -> existing))
-                .values());
+                .values()
+                .stream()
+                .collect(Collectors.toList());
         Collections.shuffle(uniqueNowShowing);
-        List<Movie> upcoming = movieRepo.findByStatus("Sắp chiếu");
-        List<Movie> uniqueUpcoming = new ArrayList<>(upcoming.stream()
+        List<Movie> upcoming = movieRepository.findByStatus("Sắp chiếu");
+        List<Movie> uniqueUpcoming = upcoming.stream()
                 .collect(Collectors.toMap(Movie::getTitle, m -> m, (existing, replacement) -> existing))
-                .values());
+                .values()
+                .stream()
+                .collect(Collectors.toList());
         model.addAttribute("nowShowingMovies", uniqueNowShowing);
         model.addAttribute("upcomingMovies", uniqueUpcoming);
-
-        User currUser = (User) session.getAttribute("currentUser");
-        if (currUser == null) {
-            return "redirect:/login";
-        }
-        return "index";
+        return "forward:/index.jsp";
     }
 
     @GetMapping("/login")
@@ -63,23 +69,24 @@ public class LoginController {
     public String loginSubmit(@RequestParam String username,
             @RequestParam String password,
             HttpSession session,
-            Model model) 
-    {
-
-        User user = userRepo.findByEmail(username).orElse(userRepo.findByPhone(username).orElse(null));
-        if (user == null) {
-            return "redirect:/login";
+            Model model) {
+        Optional<User> optionalUser = userRepository.findByUsernameOrEmailOrPhone(username, username, username);
+        if (optionalUser.isEmpty()) {
+            model.addAttribute("loginError", "Thông tin đăng nhập không chính xác.");
+            return "login";
         }
 
+        User user = optionalUser.get();
         if (!user.getPassword().equals(password)) {
-            return "redirect:/login";
+            model.addAttribute("loginError", "Mật khẩu không đúng.");
+            return "login";
         }
 
         session.setAttribute("currentUser", user);
 
         String roleName = user.getRole() != null ? user.getRole().getRoleName() : "USER";
         if ("SUPER_ADMIN".equals(roleName)) {
-            return "redirect:/admin";
+            return "redirect:/superAdmin";
         }
 
         return "redirect:/";
@@ -105,13 +112,32 @@ public class LoginController {
             return "register";
         }
 
-        if (userRepo.existsByUsername(email) || userRepo.existsByEmail(email) || userRepo.existsByPhone(phone)) {
-            model.addAttribute("registerError", "Tài khoản đã tồn tại (email/số điện thoại). Vui lòng dùng thông tin khác.");
+        // Check if email is empty
+        if (email == null || email.trim().isEmpty()) {
+            model.addAttribute("registerError", "Email không được để trống.");
             return "register";
         }
 
-        Optional<Role> userRoleOpt = roleRepo.findByRoleName("USER");
-        Role userRole = roleRepo.findByRoleName("USER").orElse(null);
+        // Check if phone is empty
+        if (phone == null || phone.trim().isEmpty()) {
+            model.addAttribute("registerError", "Số điện thoại không được để trống.");
+            return "register";
+        }
+
+        // Check if email already exists (as username or email)
+        if (userRepository.existsByUsername(email) || userRepository.existsByEmail(email)) {
+            model.addAttribute("registerError", "Email đã được đăng ký. Vui lòng dùng email khác.");
+            return "register";
+        }
+
+        // Check if phone already exists
+        if (userRepository.existsByPhone(phone)) {
+            model.addAttribute("registerError", "Số điện thoại đã được đăng ký. Vui lòng dùng số khác.");
+            return "register";
+        }
+
+        Optional<Role> userRoleOpt = roleRepository.findByRoleName("USER");
+        Role userRole = userRoleOpt.orElseGet(() -> roleRepository.save(new Role("USER")));
 
         User user = new User();
         user.setUsername(email);
@@ -121,7 +147,7 @@ public class LoginController {
         user.setPhone(phone);
         user.setRole(userRole);
 
-        userRepo.save(user);
+        userRepository.save(user);
 
         session.setAttribute("currentUser", user);
 
@@ -139,7 +165,7 @@ public class LoginController {
         if (session.getAttribute("currentUser") == null) {
             return "redirect:/login";
         }
-        return "profile";
+        return "forward:/profile.jsp";
     }
 
     @GetMapping("/profile/edit")
@@ -147,7 +173,7 @@ public class LoginController {
         if (session.getAttribute("currentUser") == null) {
             return "redirect:/login";
         }
-        return "edit-profile";
+        return "forward:/edit-profile.jsp";
     }
 
     @PostMapping("/profile/edit")
@@ -180,35 +206,34 @@ public class LoginController {
             return "redirect:/profile/edit";
         }
 
-        userRepo.save(currentUser);
+        userRepository.save(currentUser);
         session.setAttribute("currentUser", currentUser);
         redirectAttributes.addFlashAttribute("profileSuccess", "Cập nhật thông tin thành công.");
         return "redirect:/profile";
     }
 
-    @GetMapping("/admin")
-    public String adminPage() {
-        return "admin";
-    }
-
     @GetMapping("/now-showing")
     public String nowShowingPage(Model model) {
-        List<Movie> nowShowing = movieRepo.findByStatus("Đang chiếu");
-        List<Movie> uniqueNowShowing = new ArrayList<>(nowShowing.stream()
+        List<Movie> nowShowing = movieRepository.findByStatus("Đang chiếu");
+        List<Movie> uniqueNowShowing = nowShowing.stream()
                 .collect(Collectors.toMap(Movie::getTitle, m -> m, (existing, replacement) -> existing))
-                .values());
+                .values()
+                .stream()
+                .collect(Collectors.toList());
         model.addAttribute("nowShowingMovies", uniqueNowShowing);
-        return "now-showing";
+        return "forward:/now-showing.jsp";
     }
 
     @GetMapping("/upcoming")
     public String upcomingPage(Model model) {
-        List<Movie> upcoming = movieRepo.findByStatus("Sắp chiếu");
-        List<Movie> uniqueUpcoming = new ArrayList<>(upcoming.stream()
+        List<Movie> upcoming = movieRepository.findByStatus("Sắp chiếu");
+        List<Movie> uniqueUpcoming = upcoming.stream()
                 .collect(Collectors.toMap(Movie::getTitle, m -> m, (existing, replacement) -> existing))
-                .values());
+                .values()
+                .stream()
+                .collect(Collectors.toList());
         model.addAttribute("upcomingMovies", uniqueUpcoming);
-        return "upcoming";
+        return "forward:/upcoming.jsp";
     }
 
     @GetMapping("/theater")
@@ -216,7 +241,7 @@ public class LoginController {
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String brand,
             Model model) {
-        List<Cinema> cinemas = cinemaRepo.findAll();
+        List<Cinema> cinemas = cinemaRepository.findAll();
 
         if (city != null && !city.isBlank()) {
             String normalizedCity = city.trim();
@@ -234,7 +259,7 @@ public class LoginController {
         model.addAttribute("cinemas", cinemas);
         model.addAttribute("selectedCity", city != null ? city : "");
         model.addAttribute("selectedBrand", brand != null ? brand : "");
-        return "theater";
+        return "forward:/theater.jsp";
     }
 
     private boolean matchesCityFilter(Cinema cinema, String selectedCity) {
@@ -277,7 +302,7 @@ public class LoginController {
 
     @GetMapping("/promotion")
     public String promotionPage() {
-        return "promotion";
+        return "forward:/promotion.jsp";
     }
 
     @GetMapping("/change-password")
@@ -285,7 +310,7 @@ public class LoginController {
         if (session.getAttribute("currentUser") == null) {
             return "redirect:/login";
         }
-        return "change-password";
+        return "forward:/change-password.jsp";
     }
 
     @PostMapping("/change-password")
@@ -321,7 +346,7 @@ public class LoginController {
         }
 
         currentUser.setPassword(newPassword);
-        userRepo.save(currentUser);
+        userRepository.save(currentUser);
         session.setAttribute("currentUser", currentUser);
         redirectAttributes.addFlashAttribute("changePasswordSuccess", "Đổi mật khẩu thành công.");
         return "redirect:/profile";

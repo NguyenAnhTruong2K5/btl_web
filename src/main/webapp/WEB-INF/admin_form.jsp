@@ -119,11 +119,13 @@
                                 <!-- USER SELECTION -->
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-900 mb-2">
-                                        Người Dùng <span class="text-red-600">*</span>
+                                        Cinema Admin <span class="text-red-600">*</span>
                                     </label>
+                                    <p class="text-xs text-gray-500 mb-2">
+                                    </p>
                                     <select name="user.userId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
                                         required>
-                                        <option value="">-- Chọn Người Dùng --</option>
+                                        <option value="">-- Chọn Cinema Admin --</option>
                                         <c:forEach var="user" items="${users}">
                                             <option value="${user.userId}"
                                                 ${admin.user.userId == user.userId ? 'selected' : ''}>

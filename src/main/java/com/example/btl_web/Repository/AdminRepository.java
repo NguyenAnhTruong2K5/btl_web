@@ -45,4 +45,14 @@ public interface AdminRepository extends JpaRepository<Admin, Integer> {
      * Find admin by user ID and cinema ID
      */
     Optional<Admin> findByUserUserIdAndCinemaCinemaId(Long userId, Integer cinemaId);
+
+    /**
+     * Delete all admins by user ID
+     */
+    void deleteByUserUserId(Long userId);
+
+    /**
+     * Delete all admins by cinema ID
+     */
+    void deleteByCinemaCinemaId(Integer cinemaId);
 }

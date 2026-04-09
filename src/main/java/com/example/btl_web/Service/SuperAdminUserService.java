@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.cinemavn.model.User;
 import com.cinemavn.repository.UserRepository;
@@ -14,6 +15,9 @@ public class SuperAdminUserService {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    AdminService adminService;
 
     public List<User> getAllUsers(){
         return userRepository.findAll();
@@ -128,8 +132,12 @@ public class SuperAdminUserService {
         }
     }
 
+    @Transactional
     public void delete(Long id){
         if (id != null) {
+            // Xóa tất cả admin associations trước khi xóa user
+            // Để tránh foreign key constraint violation
+            adminService.deleteAllAdminsForUser(id);
             userRepository.deleteById(id);
         }
     }

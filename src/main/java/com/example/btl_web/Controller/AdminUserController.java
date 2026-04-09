@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.cinemavn.Service.AdminService;
 import com.cinemavn.Service.SuperAdminUserService;
 import com.cinemavn.model.User;
 import com.cinemavn.repository.CinemaRepository;
@@ -21,6 +22,9 @@ public class AdminUserController {
 
     @Autowired
     SuperAdminUserService userService;
+
+    @Autowired
+    AdminService adminService;
 
     @Autowired
     RoleRepository roleRepository;
@@ -69,6 +73,15 @@ public class AdminUserController {
             }
             user.setCreatedAt(oldUser.getCreatedAt());
             
+            // Kiểm tra nếu quyền được thay đổi từ CINEMA_ADMIN sang USER hoặc quyền khác
+            if (oldUser.getRole() != null && oldUser.getRole().getRoleName().equals("CINEMA_ADMIN")
+                    && !roleName.equals("CINEMA_ADMIN")) {
+                // Xóa tất cả các liên kết admin (rạp) của người dùng này
+                Long userId = user.getUserId();
+                if (userId != null) {
+                    adminService.deleteAllAdminsForUser(userId);
+                }
+            }
         }
         user.setRole(roleRepository.findByRoleName(roleName).orElse(null));
         userService.save(user);

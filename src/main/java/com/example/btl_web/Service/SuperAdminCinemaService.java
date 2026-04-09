@@ -15,6 +15,9 @@ public class SuperAdminCinemaService {
     @Autowired
     CinemaRepository cinemaRepository;
 
+    @Autowired
+    AdminService adminService;
+
     public List<Cinema> findAll(){
         return cinemaRepository.findAll();
     }
@@ -28,6 +31,9 @@ public class SuperAdminCinemaService {
     }
 
     public void delete(@NonNull Integer id){
+        // Xóa tất cả admin associations trước khi xóa cinema
+        // Để tránh foreign key constraint violation
+        adminService.deleteAllAdminsForCinema(id);
         cinemaRepository.deleteById(id);
     }
 

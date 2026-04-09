@@ -48,7 +48,8 @@ public class AdminController {
     @GetMapping("/create")
     public String showCreateAdminForm(Model model) {
         model.addAttribute("admin", new Admin());
-        model.addAttribute("users", userRepository.findAll());
+        // Chỉ hiển thị users có role CINEMA_ADMIN
+        model.addAttribute("users", userRepository.findByRoleRoleName("CINEMA_ADMIN"));
         model.addAttribute("cinemas", cinemaRepository.findAll());
         return "admin_form";
     }
@@ -79,7 +80,8 @@ public class AdminController {
                 return "redirect:/superAdmin/admins?error=Admin not found";
             }
             model.addAttribute("admin", admin);
-            model.addAttribute("users", userRepository.findAll());
+            // Chỉ hiển thị users có role CINEMA_ADMIN
+            model.addAttribute("users", userRepository.findByRoleRoleName("CINEMA_ADMIN"));
             model.addAttribute("cinemas", cinemaRepository.findAll());
             return "admin_form";
         }

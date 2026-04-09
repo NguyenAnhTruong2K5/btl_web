@@ -180,7 +180,17 @@
                                     </div>
                                 
                             </c:if>
-                                
+                                <c:if test="${user.role.roleName == 'SUPER_ADMIN'}">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-900 mb-2">
+                                        Vai Trò <span class="text-red-600">*</span>
+                                    </label>
+                                    <input type="text" name="roleName"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                                        value="${user.role.roleName}"
+                                        readonly />
+                                </div>
+                                </c:if>
                                     <!-- BUTTONS -->
                                     <div class="flex justify-between items-center pt-6 border-t">
                                         <a href="/superAdmin/users" class="text-gray-600 hover:text-gray-900">
