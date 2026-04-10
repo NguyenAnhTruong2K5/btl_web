@@ -12,4 +12,5 @@ import java.math.BigDecimal;
 public class InvoiceDTO {
     private BigDecimal amount;
     private String discountCode;
+    private Integer bookingId;
 }

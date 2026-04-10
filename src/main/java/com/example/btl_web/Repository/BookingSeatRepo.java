@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface BookingSeatRepo extends JpaRepository<BookingSeat, Integer> {
     List<BookingSeat> findByBooking(Booking booking);
+    List<BookingSeat> findByBooking_BookingId(Integer bookingId);
 }

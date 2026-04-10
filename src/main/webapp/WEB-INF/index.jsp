@@ -286,10 +286,19 @@
                                                 </div>
                                                 <p class="text-on-surface-variant text-sm line-clamp-2">
                                                     ${movie.description}</p>
-                                                <button
-                                                    class="w-full bg-surface-container-high hover:bg-primary hover:text-white text-on-surface font-bold py-3 rounded-full transition-colors flex justify-center items-center gap-2 group/btn">Đặt
-                                                    vé ngay <span
-                                                        class="material-symbols-outlined text-lg group-hover/btn:translate-x-1 transition-transform">confirmation_number</span></button>
+                                                <%-- 1. Generate the URL and store it in a variable called 'bookingUrl' --%>
+                                                <c:url var="bookingUrl" value="/booking/book">
+                                                    <c:param name="movie_id" value="${movie.movieId}" />
+                                                </c:url>
+
+                                                <%-- 2. Use that variable in your anchor tag --%>
+                                                <a href="${bookingUrl}"
+                                                   class="w-full bg-surface-container-high hover:bg-primary hover:text-white text-on-surface font-bold py-3 rounded-full transition-colors flex justify-center items-center gap-2 group/btn">
+                                                    Đặt vé ngay
+                                                    <span class="material-symbols-outlined text-lg group-hover/btn:translate-x-1 transition-transform">
+                                                        confirmation_number
+                                                    </span>
+                                                </a>
                                             </div>
                                         </div>
                                     </c:if>

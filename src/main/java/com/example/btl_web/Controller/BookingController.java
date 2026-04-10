@@ -31,11 +31,19 @@ public class BookingController {
     private final SeatService seatService;
     private final RoomService roomService;
 
-    @GetMapping("/")
+    @GetMapping("/book")
     public String openBookingPage(HttpSession session, @RequestParam("movie_id") Integer movieId) {
         User user = (User) session.getAttribute("currentUser");
         if (user == null) {
             return "redirect:/login";
+        }
+
+        if (session.getAttribute("current_booking") != null) {
+            session.removeAttribute("current_booking");
+        }
+
+        if (session.getAttribute("pre_selected_seat") != null) {
+            session.removeAttribute("pre_selected_seat");
         }
 
         BookingDTO bookingDTO = new BookingDTO();
@@ -66,21 +74,20 @@ public class BookingController {
             }
         }
 
-
-        if (availableRoomList.isEmpty()) {
-            model.addAttribute("msg", "Không còn phòng trống!");
-            return "booking-cinema-showtime-room"; // Mở trang chọn rạp và giờ chiếu
-        }
-
         model.addAttribute("showtime_list", availableRoomList);
         CinemaShowtimeDTO cinemaShowtimeDTO = new CinemaShowtimeDTO();
         model.addAttribute("cinema_showtime", cinemaShowtimeDTO);
+
+        if (availableRoomList.isEmpty()) {
+            model.addAttribute("msg", "Không còn phòng trống!");
+            return "booking-cinema-showtime-room";
+        }
 
         return "booking-cinema-showtime-room"; // Mở trang chọn rạp và giờ chiếu
     }
 
     @PostMapping("/cinema_showtime_room")
-    public String processSelectingCinemaAndShowtime(HttpSession session, @ModelAttribute("cinema_showtime") CinemaShowtimeDTO request, RedirectAttributes redirectAttributes) {
+    public String processSelectingCinemaAndShowtime(HttpSession session, @ModelAttribute("cinema_showtime") CinemaShowtimeDTO request, RedirectAttributes model) {
         BookingDTO currBooking = (BookingDTO) session.getAttribute("current_booking"); // Lấy lại booking từ session
         if (currBooking == null) {
             return "redirect:/"; // Trang chủ người dùng
@@ -90,19 +97,21 @@ public class BookingController {
         Integer showtimeId = request.getShowtimeId();
 
         Showtime showtime = showtimeRepo.findById(showtimeId).orElse(null);
-        if (showtime == null) {
-            redirectAttributes.addFlashAttribute("error_msg", "Vui lòng chọn giờ chiếu khác!");
+        Cinema cinema = cinemaRepo.findById(cinemaId).orElse(null);
+
+        if (showtime == null || cinema == null) {
+            model.addFlashAttribute("msg", "Vui lòng chọn rạp và lịch chiếu");
             return "redirect:/booking/cinema_showtime_room";
         }
 
         currBooking.setCinemaId(cinemaId);
         currBooking.setShowTimeId(showtimeId);
         currBooking.setRoomId(showtime.getRoom().getRoomId());
-        return "redirect:/booking/seat/?seat_selected=false" ;
+        return "redirect:/booking/seat" ;
     }
 
     @GetMapping("/seat")
-    public String openRoomSeatPage(HttpSession session, RedirectAttributes redirectAttributes, Model model) {
+    public String openRoomSeatPage(HttpSession session, Model model) {
         BookingDTO currBooking = (BookingDTO) session.getAttribute("current_booking");
         if (currBooking == null) {
             return "redirect:/"; // Trang chủ người dùng
@@ -118,7 +127,7 @@ public class BookingController {
             }
         }
 
-        if (!currBooking.getSeatIdList().isEmpty()) {
+        if (currBooking.getSeatIdList() != null && !currBooking.getSeatIdList().isEmpty()) {
             List<Integer> selectedSeatIdList = currBooking.getSeatIdList();
             List<Seat> selectedSeatList = new ArrayList<>();
             for (Integer seatId : selectedSeatIdList) {
@@ -133,33 +142,37 @@ public class BookingController {
 
         model.addAttribute("seat_list", seatList);
         model.addAttribute("available_seat_list", availableSeats);
-        return "booking-seat";
+        return "booking-seat"; //Chọn ghế
     }
 
     @PostMapping("/seat")
     public String processSelectingSeats(HttpSession session, @RequestParam("seat_id_list") List<Integer> currSeatIdList, Model model) {
+        // currentSeatIdList: danh sách ghế mình chọn
         BookingDTO currBooking = (BookingDTO) session.getAttribute("current_booking");
         if (currBooking == null) {
             return "redirect:/"; // Trang chủ người dùng
         }
 
-        if (currSeatIdList.isEmpty()) {
+        if (currSeatIdList == null || currSeatIdList.isEmpty()) {
             model.addAttribute("error_msg", "Vui lòng chọn ghế!");
             return "booking-seat";
         }
 
         for (Integer seatId : currSeatIdList) {
-            seatService.setSeatStatus(seatId, "booked");
+            seatService.setSeatStatus(seatId, "BOOKED");
         }
 
         @SuppressWarnings("unchecked")
-        List<Integer> preSelectedSeatId = (List<Integer>) session.getAttribute("pre_selected_seat");
+        List<Integer> preSelectedSeatIdList = (List<Integer>) session.getAttribute("pre_selected_seat");
 
-        for (Integer seatId : preSelectedSeatId) {
-            if (!currSeatIdList.contains(seatId)) {
-                seatService.setSeatStatus(seatId, "available");
-            }
-        } // Trả lại trạng thái cho ghế đã chọn trước đó mà giờ không chọn nữa
+        if (preSelectedSeatIdList != null) {
+            for (Integer seatId : preSelectedSeatIdList) {
+                if (!currSeatIdList.contains(seatId)) {
+                    seatService.setSeatStatus(seatId, "available");
+                }
+            } // Trả lại trạng thái cho ghế đã chọn trước đó mà giờ không chọn nữa
+        }
+
 
         session.setAttribute("pre_selected_seat", currSeatIdList);
         currBooking.setSeatIdList(currSeatIdList);
@@ -209,7 +222,18 @@ public class BookingController {
             return "redirect:/";
         }
 
-        bookingRepo.delete(booking);
+        List<Integer> seatIdList = currBooking.getSeatIdList();
+        if (seatIdList != null) {
+            for (Integer seatId : seatIdList) {
+                seatService.setSeatStatus(seatId, "available");
+            }
+        }
+
+        booking.setBookingStatus("CANCELED");
+        bookingRepo.save(booking);
+
+        session.removeAttribute("current_booking");
+        session.removeAttribute("pre_selected_seat");
         return "redirect:/";
     }
 }

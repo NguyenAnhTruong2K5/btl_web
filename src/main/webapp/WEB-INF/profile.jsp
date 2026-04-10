@@ -154,7 +154,7 @@
                                                 class="material-symbols-outlined text-lg text-primary">edit</span>Chỉnh
                                             sửa hồ sơ</a>
                                         <a class="flex items-center gap-3 px-4 py-3 hover:bg-surface-container-low transition-colors text-sm font-medium border-b border-outline-variant/10"
-                                            href="#"><span
+                                            href="/ticket"><span
                                                 class="material-symbols-outlined text-lg text-primary">confirmation_number</span>Vé
                                             của tôi</a>
                                         <a class="flex items-center gap-3 px-4 py-3 hover:bg-surface-container-low transition-colors text-sm font-medium"
@@ -217,7 +217,7 @@
                                 </button>
                                 <button
                                     class="flex items-center gap-3 w-full p-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors"
-                                    onclick="window.location.href='/tickets'">
+                                    onclick="window.location.href='/ticket'">
                                     <span class="material-symbols-outlined text-xl">confirmation_number</span>
                                     <span class="text-sm">Vé của tôi</span>
                                 </button>
@@ -229,7 +229,7 @@
                                 </button>
                                 <button
                                     class="flex items-center gap-3 w-full p-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors"
-                                    onclick="window.location.href='/history'">
+                                    onclick="window.location.href='/payment/history'">
                                     <span class="material-symbols-outlined text-xl">payments</span>
                                     <span class="text-sm">Lịch sử giao dịch</span>
                                 </button>

@@ -2,10 +2,8 @@ package com.example.btl_web.Controller;
 
 import com.example.btl_web.DTO.TicketDTO;
 import com.example.btl_web.Model.*;
-import com.example.btl_web.Repository.BookingRepo;
-import com.example.btl_web.Repository.BookingSeatRepo;
-import com.example.btl_web.Repository.MovieRepo;
-import com.example.btl_web.Repository.TicketRepo;
+import com.example.btl_web.Repository.*;
+import com.example.btl_web.Service.SeatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,8 +12,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpSession;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,8 +23,11 @@ public class TicketController {
     private final TicketRepo ticketRepo;
     private final BookingRepo bookingRepo;
     private final BookingSeatRepo bookingSeatRepo;
+    private final SeatStatusRepo seatStatusRepo;
 
-    @GetMapping("/")
+    private final SeatService seatService;
+
+    @GetMapping("")
     public String viewTicketList(HttpSession session, Model model) {
         User user = (User) session.getAttribute("currentUser");
         if (user == null ) {
@@ -39,7 +38,8 @@ public class TicketController {
         List<Ticket> ticketList = new ArrayList<>();
 
         for (Booking booking : bookingList) {
-            ticketRepo.findByBooking_BookingId(booking.getBookingId()).ifPresent(ticketList::add);
+            if (booking.getBookingStatus() != null && !booking.getBookingStatus().equals("CANCELED"))
+                ticketRepo.findByBooking_BookingId(booking.getBookingId()).ifPresent(ticketList::add);
         }
 
         List<TicketDTO> ticketDTOList = new ArrayList<>();
@@ -48,6 +48,7 @@ public class TicketController {
             Booking booking = ticket.getBooking();
             String movieTitle = booking.getShowtime().getMovie().getTitle();
 
+            ticketDTO.setBookingId(ticket.getBooking().getBookingId());
             ticketDTO.setMovieName(movieTitle);
             ticketDTO.setCreateAt(ticket.getCreatedAt());
             ticketDTO.setVerified(ticket.getVerified());
@@ -61,7 +62,7 @@ public class TicketController {
     @GetMapping("/{booking_id}/detail")
     public String viewTicket(HttpSession session, @PathVariable("booking_id") Integer bookingId, Model model) {
         User user = (User) session.getAttribute("currentUser");
-        if (user == null ) {
+        if (user == null) {
             return "redirect:/login";
         }
 
@@ -69,25 +70,36 @@ public class TicketController {
             return "redirect:/ticket";
         }
 
+
         Ticket ticket = ticketRepo.findByBooking_BookingId(bookingId).orElse(null);
         if (ticket == null) {
             Ticket newTicket = new Ticket();
             newTicket.setBooking(bookingRepo.findById(bookingId).orElse(null));
+            ticketRepo.save(newTicket);
         }
 
-        Booking booking = bookingRepo.findById(bookingId).orElse(null); assert booking != null;
+        assert ticket != null;
+
+        Booking booking = bookingRepo.findById(bookingId).orElse(null);
+        assert booking != null;
+
         Showtime showtime = booking.getShowtime();
         Movie movie = showtime.getMovie();
         Room room = showtime.getRoom();
         Cinema cinema = room.getCinema();
+
         List<BookingSeat> bookingSeatList = bookingSeatRepo.findByBooking(booking);
         List<String> seatNameList = new ArrayList<>();
-        for (BookingSeat bookingSeat : bookingSeatList) {
-            Seat seat = bookingSeat.getSeat();
-            String seatRow = seat.getSeatRow();
-            Integer seatNumber = seat.getSeatNumber();
-            String seatName = seatRow + seatNumber;
-            seatNameList.add(seatName);
+
+        if (bookingSeatList != null) {
+            for (BookingSeat bookingSeat : bookingSeatList) {
+                Seat seat = bookingSeat.getSeat();
+                String seatRow = seat.getSeatRow();
+                Integer seatNumber = seat.getSeatNumber();
+                String seatName = seatRow + seatNumber;
+                seatService.setSeatStatus(bookingSeat.getSeat().getSeatId(), "BOOKED");
+                seatNameList.add(seatName);
+            }
         }
 
         TicketDTO ticketDTO = new TicketDTO();
@@ -101,7 +113,15 @@ public class TicketController {
 
         model.addAttribute("ticket_detail", ticketDTO);
         model.addAttribute("booking_id", bookingId);
-        return "ticket-detail"; // Trang này gồm nút xem hoá đơn
+
+        String bookingStatus = booking.getBookingStatus();
+
+        if (bookingStatus != null && bookingStatus.equals("CONFIRMED")) {
+            model.addAttribute("is_verified", ticket.getVerified());
+            return "ticket"; // Nếu vé đã được người đặt xác nhận thì sẽ chuyển sang trang ticket để xem thông tin vé (Không có nút huỷ vé ở trang này)
+        }
+
+        return "booking-ticket"; // Hiện thị thông tin vé và nút xác nhận đặt vé
     }
 
     @GetMapping("/{booking_id}/cancel")
@@ -110,7 +130,23 @@ public class TicketController {
             return "redirect:/ticket";
         }
 
-        bookingRepo.deleteById(bookingId);
+        Booking booking = bookingRepo.findById(bookingId).orElse(null);
+        if (booking == null) {
+            return "redirect:/";
+        }
+
+        List<BookingSeat> bookingSeatList = bookingSeatRepo.findByBooking(booking);
+        if (bookingSeatList != null) {
+            for (BookingSeat bookingSeat : bookingSeatList) {
+                seatService.setSeatStatus(bookingSeat.getSeat().getSeatId(), "available");
+            }
+        }
+
+        booking.setBookingStatus("CANCELED");
+        bookingRepo.save(booking);
+
+        session.removeAttribute("current_booking");
+        session.removeAttribute("pre_selected_seat");
         return "redirect:/ticket";
     }
 }

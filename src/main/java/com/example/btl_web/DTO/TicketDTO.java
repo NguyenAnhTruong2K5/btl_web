@@ -13,8 +13,10 @@ import java.util.List;
 @Setter
 @RequiredArgsConstructor
 public class TicketDTO {
+    private Integer bookingId;
     private LocalDateTime createAt;
     private boolean verified;
+    private String status;
     private String movieName;
     private String cinemaName;
     private List<String> seatList;

@@ -11,4 +11,5 @@ public class PaymentDTO {
     private Integer paymentId;
     private Integer invoiceId;
     private Integer ticketId;
+    private Integer bookingId;
 }

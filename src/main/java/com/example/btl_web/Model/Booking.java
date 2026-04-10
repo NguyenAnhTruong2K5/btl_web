@@ -27,6 +27,6 @@ public class Booking {
     private Showtime showtime;
 
     private BigDecimal totalPrice;
-    private String bookingStatus;
+    private String bookingStatus; // Canceled, confirmed
     private LocalDateTime bookingTime = LocalDateTime.now();
 }

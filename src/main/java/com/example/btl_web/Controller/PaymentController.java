@@ -11,9 +11,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+
 import javax.servlet.http.HttpSession;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +26,7 @@ public class PaymentController {
     private final InvoiceRepo invoiceRepo;
     private final PaymentRepo paymentRepo;
     private final TicketRepo ticketRepo;
+    private final BookingDiscountRepo bookingDiscountRepo;
 
     private final DiscountService discountService;
 
@@ -36,71 +37,105 @@ public class PaymentController {
             return "redirect:/ticket";
         }
 
+        booking.setBookingStatus("CONFIRMED");
+        bookingRepo.save(booking);
+
         InvoiceDTO invoiceDTO = new InvoiceDTO();
         invoiceDTO.setAmount(booking.getTotalPrice());
+        invoiceDTO.setBookingId(bookingId);
 
         model.addAttribute("invoice_dto", invoiceDTO);
-        return "invoice"; // Hiện thông tin thanh toán và nút xác nhận thanh toán
+        model.addAttribute("booking_id", bookingId);
+
+        Payment payment = paymentRepo.findByBooking_BookingId(bookingId).orElse(null);
+        if (payment != null) {
+            BookingDiscount bookingDiscount = bookingDiscountRepo.findByBooking_BookingId(bookingId).orElse(null);
+            if (bookingDiscount != null) {
+                invoiceDTO.setDiscountCode(bookingDiscount.getDiscount().getCode());
+            }
+
+            model.addAttribute("invoice_dto", invoiceDTO);
+            return "invoice";
+        }
+
+
+
+        return "booking-invoice"; // Hiện thông tin thanh toán và nút thanh toán ngay hoặc thanh toán sau
     }
 
     @PostMapping("/{booking_id}/invoice")
-    public String processPayment(HttpSession session, @ModelAttribute("invoice_dto") InvoiceDTO invoiceDTO, Model model, @PathVariable("booking_id") Integer bookingId) {
+    public String processPayment(HttpSession session, @ModelAttribute("invoice_dto") InvoiceDTO invoiceDTO, Model model, @PathVariable("booking_id") Integer bookingId, @RequestParam("action") String action) {
         String discountCode = invoiceDTO.getDiscountCode();
-        if (discountCode == null) {
-            model.addAttribute("error_msg", "Vui lòng nhập mã giảm giá!");
-            return "invoice";
-        }
-
-        if (!discountService.isDiscountAvailable(discountCode)) {
-            model.addAttribute("error_msg", "Mã giảm giá không hợp lệ hoặc đã hết hạn, vui lòng nhập lại");
-            return "invoice";
-        }
-
-        Discount discount = discountRepo.findByCode(discountCode).orElse(null); assert discount != null;
-        BookingDiscount bookingDiscount = new BookingDiscount();
         Booking booking = bookingRepo.findById(bookingId).orElse(null); assert booking != null;
 
-        BigDecimal currPrice = booking.getTotalPrice();
-        BigDecimal discountPercent = BigDecimal.valueOf(discount.getDiscountPercent());
-        BigDecimal priceAfterDiscount = currPrice.multiply(
-                BigDecimal.ONE.subtract(discountPercent.divide(BigDecimal.valueOf(100)))
-        );
+        if (action.equals("apply_discount")) {
+            if (discountCode == null || !discountService.isDiscountAvailable(discountCode.trim())) {
+                invoiceDTO.setAmount(booking.getTotalPrice());
+                model.addAttribute("error_msg", "Mã giảm giá không hợp lệ hoặc đã hết hạn, vui lòng nhập lại");
+                return "invoice";
+            }
 
-        booking.setTotalPrice(priceAfterDiscount);
-        bookingDiscount.setDiscount(discount);
-        bookingDiscount.setBooking(booking);
+            if (discountService.isDiscountAvailable(discountCode.trim())) {
+                Discount discount = discountRepo.findByCode(discountCode).orElse(null); assert discount != null;
+                BookingDiscount bookingDiscount = new BookingDiscount();
+                BigDecimal currPrice = booking.getTotalPrice();
+                BigDecimal discountPercent = BigDecimal.valueOf(discount.getDiscountPercent());
+                BigDecimal priceAfterDiscount = currPrice.multiply(
+                        BigDecimal.ONE.subtract(discountPercent.divide(BigDecimal.valueOf(100)))
+                );
 
-        Invoice invoice = new Invoice();
-        invoice.setAmount(invoiceDTO.getAmount());
-        invoice.setBooking(booking);
-        invoiceRepo.save(invoice);
+                booking.setTotalPrice(priceAfterDiscount);
+                bookingRepo.save(booking);
 
-        Payment payment = new Payment();
-        payment.setBooking(booking);
-        paymentRepo.save(payment);
-        invoice.setStatus("Đã thanh toán");
+                bookingDiscount.setDiscount(discount);
+                bookingDiscount.setBooking(booking);
+                bookingDiscountRepo.save(bookingDiscount);
 
-        Ticket ticket = ticketRepo.findByBooking_BookingId(bookingId).orElse(null);
-        assert ticket != null;
-        ticket.setVerified(true);
+                invoiceDTO.setAmount(priceAfterDiscount);
+                model.addAttribute("success_msg", "Áp dụng mã giảm giá thành công!");
+                return "booking-invoice";
+            }
+        }
+
+        if (action.equals("pay_now")) {
+            if (discountCode != null) {
+                if (discountService.isDiscountAvailable(discountCode.trim())) {
+                    Discount discount = discountRepo.findByCode(discountCode).orElse(null); assert discount != null;
+                    BookingDiscount bookingDiscount = new BookingDiscount();
+                    BigDecimal currPrice = booking.getTotalPrice();
+                    BigDecimal discountPercent = BigDecimal.valueOf(discount.getDiscountPercent());
+                    BigDecimal priceAfterDiscount = currPrice.multiply(
+                            BigDecimal.ONE.subtract(discountPercent.divide(BigDecimal.valueOf(100)))
+                    );
+
+                    booking.setTotalPrice(priceAfterDiscount);
+                    bookingRepo.save(booking);
+
+                    bookingDiscount.setDiscount(discount);
+                    bookingDiscount.setBooking(booking);
+                    bookingDiscountRepo.save(bookingDiscount);
+                }
+            }
+
+            Invoice invoice = new Invoice();
+            invoice.setAmount(invoiceDTO.getAmount());
+            invoice.setBooking(booking);
+            invoice.setStatus("Đã thanh toán");
+            invoiceRepo.save(invoice);
+
+            Payment payment = new Payment();
+            payment.setBooking(booking);
+            paymentRepo.save(payment);
+
+
+            Ticket ticket = ticketRepo.findByBooking_BookingId(bookingId).orElse(null);
+            if (ticket != null) {
+                ticket.setVerified(true);
+                ticketRepo.save(ticket);
+            }
+        }
 
         return "redirect:/payment/history";
-    }
-
-    @GetMapping("/cancel")
-    public String cancelThePayment(HttpSession session) {
-        BookingDTO currBooking = (BookingDTO) session.getAttribute("current_booking");
-        if (currBooking == null) {
-            return "redirect:/"; // Trang chủ người dùng
-        }
-
-        Booking booking = bookingRepo.findById(currBooking.getBookingId()).orElse(null);
-        if (booking == null) {
-            return "redirect:/";
-        }
-
-        bookingRepo.delete(booking);
-        return "redirect:/";
     }
 
     @GetMapping("/history")
@@ -121,15 +156,18 @@ public class PaymentController {
                 continue;
             }
 
-            Invoice invoice = invoiceRepo.findByBooking_BookingId(bookingId).orElse(null); assert invoice != null;
-            Ticket ticket = ticketRepo.findByBooking_BookingId(bookingId).orElse(null); assert ticket != null;
+            Invoice invoice = invoiceRepo.findByBooking_BookingId(bookingId).orElse(null);
+            Ticket ticket = ticketRepo.findByBooking_BookingId(bookingId).orElse(null);
 
-            PaymentDTO paymentDTO = new PaymentDTO();
-            paymentDTO.setInvoiceId(invoice.getInvoiceId());
-            paymentDTO.setTicketId(ticket.getTicketId());
-            paymentDTO.setPaymentId(payment.getPaymentId());
+            if (invoice != null && ticket != null) {
+                PaymentDTO paymentDTO = new PaymentDTO();
+                paymentDTO.setInvoiceId(invoice.getInvoiceId());
+                paymentDTO.setTicketId(ticket.getTicketId());
+                paymentDTO.setPaymentId(payment.getPaymentId());
+                paymentDTO.setBookingId(bookingId);
 
-            paymentDTOList.add(paymentDTO);
+                paymentDTOList.add(paymentDTO);
+            }
         }
 
         model.addAttribute("payment_list", paymentDTOList);

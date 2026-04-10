@@ -48,9 +48,6 @@ public class LoginController {
         model.addAttribute("upcomingMovies", uniqueUpcoming);
 
         User currUser = (User) session.getAttribute("currentUser");
-        if (currUser == null) {
-            return "redirect:/login";
-        }
         return "index";
     }
 
