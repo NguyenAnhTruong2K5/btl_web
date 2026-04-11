@@ -76,7 +76,7 @@ public class LoginController {
 
         String roleName = user.getRole() != null ? user.getRole().getRoleName() : "USER";
         if ("SUPER_ADMIN".equals(roleName)) {
-            return "redirect:/admin";
+            return "redirect:/superAdmin";
         }
 
         return "redirect:/";

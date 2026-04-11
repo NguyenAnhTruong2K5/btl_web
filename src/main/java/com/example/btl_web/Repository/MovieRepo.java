@@ -11,4 +11,5 @@ import java.util.List;
 public interface MovieRepo extends JpaRepository<Movie, Integer> {
     @Query("SELECT DISTINCT m FROM Movie m WHERE m.status = :status")
     List<Movie> findByStatus(String status);
+
 }
