@@ -291,10 +291,10 @@
         <div class="value">
           <c:choose>
             <c:when test="${payment != null}">
-              ${payment.paymentStatus}
+              Đã thanh toán
             </c:when>
             <c:otherwise>
-              Chưa có thanh toán
+              Chưa thanh toán
             </c:otherwise>
           </c:choose>
         </div>
