@@ -128,13 +128,11 @@
                     <p class="text-xs text-gray-400 mt-1 font-mono tracking-widest">ID: ${booking_id}</p>
                 </div>
 
-                <c:if test="${is_verified == 'false'}">
-                    <a href="${pageContext.request.contextPath}/payment/${booking_id}/invoice"
-                       class="flex-1 bg-white border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-3.5 rounded-xl transition-colors flex justify-center items-center gap-2">
-                        <span class="material-symbols-outlined text-lg">receipt_long</span>
-                        Xem hoá đơn
-                    </a>
-                </c:if>
+                <a href="${pageContext.request.contextPath}/payment/${booking_id}/invoice"
+                   class="flex-1 bg-white border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-3.5 rounded-xl transition-colors flex justify-center items-center gap-2">
+                    <span class="material-symbols-outlined text-lg">receipt_long</span>
+                    Xem hoá đơn
+                </a>
 
             </div>
 

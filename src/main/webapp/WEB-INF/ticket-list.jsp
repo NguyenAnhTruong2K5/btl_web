@@ -92,22 +92,30 @@
 
                         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 border-t md:border-t-0 md:border-l border-dashed border-gray-200 pt-4 md:pt-0 md:pl-6 w-full md:w-auto shrink-0">
 
-                            <div class="flex-grow sm:flex-grow-0">
+                            <div class="flex flex-wrap gap-2 sm:flex-grow-0">
+                                <%-- 1. Verification Status --%>
                                 <c:choose>
-                                    <%-- Case: Ticket is paid/verified --%>
                                     <c:when test="${ticket.verified}">
                                         <span class="px-3 py-1 bg-green-50 text-green-700 text-xs font-bold uppercase rounded-full border border-green-200 flex items-center gap-1 w-fit">
-                                            <span class="material-symbols-outlined text-[14px]">payments</span>
-                                            Đã thanh toán
+                                            <span class="material-symbols-outlined text-[14px]">verified</span>
+                                            Đã xác thực
                                         </span>
                                     </c:when>
-
-                                    <%-- Case: Ticket is NOT verified (Pending payment) --%>
                                     <c:otherwise>
-                                        <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold uppercase rounded-full border border-blue-200 flex items-center gap-1 w-fit">
-                                            <span class="material-symbols-outlined text-[14px]">pending_actions</span>
-                                            Chưa thanh toán
-                                        </span>
+                                        <c:choose>
+                                            <c:when test="${ticket.paid}">
+                                                <span class="px-3 py-1 bg-green-50 text-green-700 text-xs font-bold uppercase rounded-full border border-green-200 flex items-center gap-1 w-fit">
+                                                    <span class="material-symbols-outlined text-[14px]">payments</span>
+                                                    Đã thanh toán
+                                                </span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span class="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold uppercase rounded-full border border-amber-200 flex items-center gap-1 w-fit">
+                                                    <span class="material-symbols-outlined text-[14px]">error</span>
+                                                    Chưa thanh toán
+                                                </span>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </c:otherwise>
                                 </c:choose>
                             </div>
@@ -120,7 +128,7 @@
                                     Chi tiết
                                 </a>
 
-                                <c:if test="${!ticket.verified}">
+                                <c:if test="${!ticket.paid}">
                                     <a href="${pageContext.request.contextPath}/ticket/${ticket.bookingId}/cancel"
                                        onclick="return confirm('Bạn có chắc chắn muốn hủy vé này không? Hành động này không thể hoàn tác.');"
                                        class="flex-1 sm:flex-none px-4 py-2.5 text-sm font-bold text-error bg-error/10 hover:bg-error hover:text-white border border-error/20 rounded-xl transition-all flex justify-center items-center gap-1.5 group/cancel">

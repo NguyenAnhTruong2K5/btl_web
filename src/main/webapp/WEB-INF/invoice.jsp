@@ -55,7 +55,7 @@
         <a href="${pageContext.request.contextPath}/payment/history"
            class="w-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold py-4 rounded-xl transition-all shadow-sm flex justify-center items-center gap-2">
             <span class="material-symbols-outlined">arrow_back</span>
-            Trở lại lịch sử thanh toán
+            Lịch sử thanh toán
         </a>
 
         <div class="bg-white rounded-t-3xl shadow-xl p-8 pb-4 text-center relative z-10">
@@ -64,7 +64,23 @@
                 <span class="material-symbols-outlined text-5xl text-success">check_circle</span>
             </div>
 
-            <h1 class="text-2xl font-extrabold text-gray-800 tracking-tight mb-1">Thanh toán thành công!</h1>
+            <c:choose>
+                <%-- Case: Ticket is paid/verified --%>
+                <c:when test="${is_verified}">
+                    <span class="px-3 py-1 bg-green-50 text-green-700 text-xs font-bold uppercase rounded-full border border-green-200 flex items-center gap-1 w-fit">
+                        <span class="material-symbols-outlined text-[14px]">payments</span>
+                        Giao dịch đã được xác thực, bạn đã thanh toán thành công!
+                    </span>
+                </c:when>
+
+                <%-- Case: Ticket is NOT verified (Pending payment) --%>
+                <c:otherwise>
+                    <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold uppercase rounded-full border border-blue-200 flex items-center gap-1 w-fit">
+                        <span class="material-symbols-outlined text-[14px]">pending_actions</span>
+                        Giao dịch đang được xác thực, vui lòng chờ!
+                    </span>
+                </c:otherwise>
+            </c:choose>
             <p class="text-sm text-gray-500 mb-8">Cảm ơn bạn đã sử dụng dịch vụ</p>
 
             <div class="bg-gray-50 rounded-2xl p-6 border border-gray-100">
@@ -99,7 +115,6 @@
                 <span class="material-symbols-outlined">confirmation_number</span>
                 Xem vé của tôi
             </a>
-
         </div>
 
     </div>

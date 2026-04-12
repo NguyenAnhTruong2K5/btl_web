@@ -13,6 +13,7 @@ import java.util.List;
 @Setter
 @RequiredArgsConstructor
 public class TicketDTO {
+    private boolean isPaid = false;
     private Integer bookingId;
     private LocalDateTime createAt;
     private boolean verified;

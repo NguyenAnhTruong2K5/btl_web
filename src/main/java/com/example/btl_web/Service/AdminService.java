@@ -53,21 +53,21 @@ public class AdminService {
     /**
      * Get admin by user
      */
-    public Admin findByUser(@NonNull Long userId) {
+    public Admin findByUser(@NonNull Integer userId) {
         return adminRepository.findByUserUserId(userId).orElse(null);
     }
 
     /**
      * Get admin by user ID and cinema ID
      */
-    public Admin findByUserAndCinema(@NonNull Long userId, @NonNull Integer cinemaId) {
+    public Admin findByUserAndCinema(@NonNull Integer userId, @NonNull Integer cinemaId) {
         return adminRepository.findByUserUserIdAndCinemaCinemaId(userId, cinemaId).orElse(null);
     }
 
     /**
      * Check if user is admin of a specific cinema
      */
-    public boolean isAdminOfCinema(@NonNull Long userId, @NonNull Integer cinemaId) {
+    public boolean isAdminOfCinema(@NonNull Integer userId, @NonNull Integer cinemaId) {
         return adminRepository.existsByUserUserIdAndCinemaCinemaId(userId, cinemaId);
     }
 
@@ -103,7 +103,7 @@ public class AdminService {
      */
     public Admin saveAdminForUserAndCinema(@NonNull Integer userId, @NonNull Integer cinemaId) {
         // Check if admin already exists
-        if (isAdminOfCinema(Long.valueOf(userId), cinemaId)) {
+        if (isAdminOfCinema(Integer.valueOf(userId), cinemaId)) {
             throw new IllegalArgumentException("User is already an admin of this cinema");
         }
 
@@ -136,7 +136,7 @@ public class AdminService {
      * Delete admin by user and cinema
      */
     @Transactional
-    public void deleteAdminFromCinema(@NonNull Long userId, @NonNull Integer cinemaId) {
+    public void deleteAdminFromCinema(@NonNull Integer userId, @NonNull Integer cinemaId) {
         Optional<Admin> admin = adminRepository.findByUserUserIdAndCinemaCinemaId(userId, cinemaId);
         admin.ifPresent(adminRepository::delete);
     }
@@ -144,7 +144,7 @@ public class AdminService {
     /**
      * Get count of admins for a cinema
      */
-    public long countAdminsForCinema(@NonNull Integer cinemaId) {
+    public Integer countAdminsForCinema(@NonNull Integer cinemaId) {
         return adminRepository.findByCinemaCinemaId(cinemaId).size();
     }
 
