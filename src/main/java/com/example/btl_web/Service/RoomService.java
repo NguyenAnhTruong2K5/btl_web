@@ -18,7 +18,9 @@ public class RoomService {
         List<Seat> seatList = seatRepo.findByRoom_RoomId(roomId);
         int availableSeat = 0;
         for (Seat seat : seatList) {
-            SeatStatus seatStatus = seatStatusRepo.findBySeat_SeatId(seat.getSeatId()).orElse(null);
+            List<SeatStatus> list = seatStatusRepo.findBySeat_SeatId(seat.getSeatId());
+
+            SeatStatus seatStatus = list.isEmpty() ? null : list.get(0);
             if (seatStatus != null && seatStatus.getStatus().equals("available")) {
                 availableSeat += 1;
             }

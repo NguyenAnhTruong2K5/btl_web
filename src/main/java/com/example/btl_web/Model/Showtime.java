@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -26,9 +27,15 @@ public class Showtime {
     @JoinColumn(name = "room_id")
     private Room room;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate showDate;
+
+    @DateTimeFormat(pattern = "HH:mm")
     private LocalTime startTime;
+
+    @DateTimeFormat(pattern = "HH:mm")
     private LocalTime endTime;
+
     private BigDecimal price;
     private String status;
 }

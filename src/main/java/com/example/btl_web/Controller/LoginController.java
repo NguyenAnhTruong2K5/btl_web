@@ -79,10 +79,6 @@ public class LoginController {
             return "redirect:/superAdmin";
         }
         else if ("CINEMA_ADMIN".equalsIgnoreCase(roleName)) {
-            return "redirect:/admin/rooms";
-        }
-
-        if ("CINEMA_ADMIN".equals(roleName)) {
             return "redirect:/admin/cinema";
         }
 

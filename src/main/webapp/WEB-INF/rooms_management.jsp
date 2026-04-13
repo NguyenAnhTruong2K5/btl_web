@@ -47,6 +47,12 @@
                     <a href="${pageContext.request.contextPath}/admin/rooms" class="text-red-700 font-bold border-b-2 border-red-700">
                         Phòng chiếu
                     </a>
+
+                    <a href="${pageContext.request.contextPath}/admin/showtimes"
+                       class="text-gray-800 font-semibold hover:text-red-600 pb-1">
+                        Suất chiếu
+                    </a>
+
                 </div>
 
                 <div class="flex items-center gap-4">
@@ -68,6 +74,11 @@
             <div class="max-w-6xl mx-auto space-y-6">
 
                 <h1 class="text-3xl font-bold">Quản lý phòng chiếu</h1>
+                <!-- quay lai -->
+                <a href="${pageContext.request.contextPath}/admin/cinema"
+                   class="inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-lg font-medium transition">
+                    ← Dashboard
+                </a>
 
                 <!-- SUCCESS MESSAGE -->
                 <c:if test="${not empty message}">
@@ -184,7 +195,14 @@
                     <button type="button" onclick="closeAddModal()" class="text-gray-500 text-2xl leading-none">&times;</button>
                 </div>
 
-                <form action="${pageContext.request.contextPath}/admin/rooms/save" method="post" class="p-6 space-y-4">
+                <form action="${pageContext.request.contextPath}/admin/rooms/create" method="post" class="p-6 space-y-4">
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">ID phòng</label>
+                        <input type="number" name="roomId" min="1" placeholder="Ví dụ: 1"
+                               class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400" required>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-semibold mb-2">Tên phòng</label>
                         <input type="text" name="roomName" placeholder="Ví dụ: Phòng 1"
@@ -219,7 +237,7 @@
                     <button type="button" onclick="closeEditModal()" class="text-gray-500 text-2xl leading-none">&times;</button>
                 </div>
 
-                <form action="${pageContext.request.contextPath}/admin/rooms/save" method="post" class="p-6 space-y-4">
+                <form action="${pageContext.request.contextPath}/admin/rooms/update" method="post" class="p-6 space-y-4">
                     <input type="hidden" name="roomId" id="editRoomId">
 
                     <div>
@@ -230,7 +248,7 @@
 
                     <div>
                         <label class="block text-sm font-semibold mb-2">Tổng số ghế</label>
-                        <input type="number" name="totalSeats" id="editTotalSeats" min="1"
+                        <input type="number" name="totalSeats" id="editTotalSeats" min="0"
                                class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400" required>
                     </div>
 
