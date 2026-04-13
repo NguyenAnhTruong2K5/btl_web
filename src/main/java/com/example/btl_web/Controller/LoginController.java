@@ -40,14 +40,25 @@ public class LoginController {
                 .collect(Collectors.toMap(Movie::getTitle, m -> m, (existing, replacement) -> existing))
                 .values());
         Collections.shuffle(uniqueNowShowing);
+
         List<Movie> upcoming = movieRepo.findByStatus("Sắp chiếu");
         List<Movie> uniqueUpcoming = new ArrayList<>(upcoming.stream()
                 .collect(Collectors.toMap(Movie::getTitle, m -> m, (existing, replacement) -> existing))
                 .values());
+
         model.addAttribute("nowShowingMovies", uniqueNowShowing);
         model.addAttribute("upcomingMovies", uniqueUpcoming);
 
         User currUser = (User) session.getAttribute("currentUser");
+
+        if (currUser != null) {
+            String roleName = currUser.getRole() != null ? currUser.getRole().getRoleName() : "";
+
+            if ("CINEMA_ADMIN".equals(roleName) || "SUPER_ADMIN".equals(roleName)) {
+                session.invalidate();
+            }
+        }
+
         return "index";
     }
 
@@ -130,7 +141,7 @@ public class LoginController {
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
-        return "redirect:/";
+        return "redirect:/login";
     }
 
     @GetMapping("/profile")

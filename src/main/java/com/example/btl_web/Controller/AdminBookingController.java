@@ -40,14 +40,14 @@ public class AdminBookingController {
         }
 
         if (!isAdminCinema(currentUser)) {
-            return "redirect:/";
+            return "redirect:/login";
         }
 
         try {
             Integer managedCinemaId = getManagedCinemaId(currentUser);
             if (managedCinemaId == null) {
                 redirectAttributes.addFlashAttribute("errorMsg", "Tài khoản admin chưa được gán rạp.");
-                return "redirect:/";
+                return "redirect:/login";
             }
 
             filterDTO.setCinemaId(managedCinemaId);
@@ -81,13 +81,13 @@ public class AdminBookingController {
         }
 
         if (!isAdminCinema(currentUser)) {
-            return "redirect:/";
+            return "redirect:/login";
         }
 
         Integer managedCinemaId = getManagedCinemaId(currentUser);
         if (managedCinemaId == null) {
             redirectAttributes.addFlashAttribute("errorMsg", "Tài khoản admin chưa được gán rạp.");
-            return "redirect:/";
+            return "redirect:/login";
         }
 
         Booking booking = adminBookingService.getBookingByIdForCinemaAdmin(id, managedCinemaId);
@@ -108,7 +108,7 @@ public class AdminBookingController {
                                  RedirectAttributes redirectAttributes,
                                  HttpSession session) {
         if (!canAccessBooking(id, session)) {
-            return "redirect:/";
+            return "redirect:/login";
         }
 
         Booking booking = adminBookingService.getBookingByIdForCinemaAdmin(
@@ -131,7 +131,7 @@ public class AdminBookingController {
                                 RedirectAttributes redirectAttributes,
                                 HttpSession session) {
         if (!canAccessBooking(id, session)) {
-            return "redirect:/";
+            return "redirect:/login";
         }
 
         Booking booking = adminBookingService.getBookingByIdForCinemaAdmin(
@@ -155,7 +155,7 @@ public class AdminBookingController {
                                RedirectAttributes redirectAttributes,
                                HttpSession session) {
         if (!canAccessBooking(id, session)) {
-            return "redirect:/";
+            return "redirect:/login";
         }
 
         Booking booking = adminBookingService.getBookingByIdForCinemaAdmin(
