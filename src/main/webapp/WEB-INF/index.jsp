@@ -177,7 +177,7 @@
                                                 class="material-symbols-outlined text-lg text-primary">edit</span>Chỉnh
                                             sửa hồ sơ</a>
                                         <a class="flex items-center gap-3 px-4 py-3 hover:bg-surface-container-low transition-colors text-sm font-medium border-b border-outline-variant/10"
-                                            href="#"><span
+                                            href="/ticket"><span
                                                 class="material-symbols-outlined text-lg text-primary">confirmation_number</span>Vé
                                             của tôi</a>
                                         <a class="flex items-center gap-3 px-4 py-3 hover:bg-surface-container-low transition-colors text-sm font-medium"

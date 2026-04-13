@@ -37,7 +37,7 @@ public class PaymentController {
             return "redirect:/ticket";
         }
 
-        booking.setBookingStatus("CONFIRMED");
+        booking.setBookingStatus("PENDING");
         bookingRepo.save(booking);
 
         InvoiceDTO invoiceDTO = new InvoiceDTO();
@@ -54,11 +54,13 @@ public class PaymentController {
                 invoiceDTO.setDiscountCode(bookingDiscount.getDiscount().getCode());
             }
 
+            Ticket ticket = ticketRepo.findByBooking_BookingId(bookingId).orElse(null);
+            if (ticket != null) {
+                model.addAttribute("is_verified", ticket.getVerified());
+            }
             model.addAttribute("invoice_dto", invoiceDTO);
             return "invoice";
         }
-
-
 
         return "booking-invoice"; // Hiện thông tin thanh toán và nút thanh toán ngay hoặc thanh toán sau
     }
@@ -120,7 +122,6 @@ public class PaymentController {
             Invoice invoice = new Invoice();
             invoice.setAmount(invoiceDTO.getAmount());
             invoice.setBooking(booking);
-            invoice.setStatus("Đã thanh toán");
             invoiceRepo.save(invoice);
 
             Payment payment = new Payment();
@@ -130,7 +131,6 @@ public class PaymentController {
 
             Ticket ticket = ticketRepo.findByBooking_BookingId(bookingId).orElse(null);
             if (ticket != null) {
-                ticket.setVerified(true);
                 ticketRepo.save(ticket);
             }
         }

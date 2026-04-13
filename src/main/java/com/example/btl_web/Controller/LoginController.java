@@ -82,6 +82,10 @@ public class LoginController {
             return "redirect:/admin/rooms";
         }
 
+        if ("CINEMA_ADMIN".equals(roleName)) {
+            return "redirect:/admin/cinema";
+        }
+
         return "redirect:/";
     }
 

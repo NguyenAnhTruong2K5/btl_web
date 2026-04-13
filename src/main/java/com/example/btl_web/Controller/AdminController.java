@@ -155,7 +155,7 @@ public class AdminController {
      */
     @GetMapping("/remove")
     public String removeAdminFromCinema(
-            @RequestParam Long userId,
+            @RequestParam Integer userId,
             @RequestParam Integer cinemaId) {
         if (userId != null && cinemaId != null) {
             adminService.deleteAdminFromCinema(userId, cinemaId);
@@ -170,7 +170,7 @@ public class AdminController {
     @GetMapping("/check")
     @ResponseBody
     public boolean isAdminOfCinema(
-            @RequestParam Long userId,
+            @RequestParam Integer userId,
             @RequestParam Integer cinemaId) {
         if (userId != null && cinemaId != null) {
             return adminService.isAdminOfCinema(userId, cinemaId);

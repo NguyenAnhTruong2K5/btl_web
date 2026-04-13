@@ -29,7 +29,7 @@ public interface AdminRepo extends JpaRepository<Admin, Integer> {
     /**
      * Find admin by user ID
      */
-    Optional<Admin> findByUserUserId(Long userId);
+    Optional<Admin> findByUserUserId(Integer userId);
 
     /**
      * Check if user is admin of a specific cinema
@@ -39,12 +39,12 @@ public interface AdminRepo extends JpaRepository<Admin, Integer> {
     /**
      * Check if user is admin of a specific cinema ID
      */
-    boolean existsByUserUserIdAndCinemaCinemaId(Long userId, Integer cinemaId);
+    boolean existsByUserUserIdAndCinemaCinemaId(Integer userId, Integer cinemaId);
 
     /**
      * Find admin by user ID and cinema ID
      */
-    Optional<Admin> findByUserUserIdAndCinemaCinemaId(Long userId, Integer cinemaId);
+    Optional<Admin> findByUserUserIdAndCinemaCinemaId(Integer userId, Integer cinemaId);
 
     /**
      * Delete all admins by user ID
@@ -55,4 +55,5 @@ public interface AdminRepo extends JpaRepository<Admin, Integer> {
      * Delete all admins by cinema ID
      */
     void deleteByCinemaCinemaId(Integer cinemaId);
+
 }

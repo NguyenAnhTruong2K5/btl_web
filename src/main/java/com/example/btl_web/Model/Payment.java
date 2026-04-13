@@ -25,5 +25,5 @@ public class Payment {
 
     private String paymentMethod;
     private String paymentStatus;
-    private LocalDateTime paymentTime;
+    private LocalDateTime paymentTime = LocalDateTime.now();
 }

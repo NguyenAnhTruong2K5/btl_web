@@ -24,7 +24,7 @@ public class TicketController {
     private final BookingRepo bookingRepo;
     private final BookingSeatRepo bookingSeatRepo;
     private final SeatStatusRepo seatStatusRepo;
-
+    private final PaymentRepo paymentRepo;
     private final SeatService seatService;
 
     @GetMapping("")
@@ -47,7 +47,12 @@ public class TicketController {
             TicketDTO ticketDTO = new TicketDTO();
             Booking booking = ticket.getBooking();
             String movieTitle = booking.getShowtime().getMovie().getTitle();
-
+            String bookingStatus = booking.getBookingStatus();
+            
+            if (paymentRepo.findByBooking_BookingId(booking.getBookingId()).isPresent()) {
+                ticketDTO.setPaid(true);
+            }
+            
             ticketDTO.setBookingId(ticket.getBooking().getBookingId());
             ticketDTO.setMovieName(movieTitle);
             ticketDTO.setCreateAt(ticket.getCreatedAt());
@@ -116,9 +121,8 @@ public class TicketController {
 
         String bookingStatus = booking.getBookingStatus();
 
-        if (bookingStatus != null && bookingStatus.equals("CONFIRMED")) {
-            model.addAttribute("is_verified", ticket.getVerified());
-            return "ticket"; // Nếu vé đã được người đặt xác nhận thì sẽ chuyển sang trang ticket để xem thông tin vé (Không có nút huỷ vé ở trang này)
+        if (bookingStatus != null && !bookingStatus.equals("CANCELED")) {
+            return "ticket"; // Nếu vé đã xác nhận thì sẽ chuyển sang trang ticket để xem thông tin vé (Không có nút huỷ vé ở trang này)
         }
 
         return "booking-ticket"; // Hiện thị thông tin vé và nút xác nhận đặt vé
