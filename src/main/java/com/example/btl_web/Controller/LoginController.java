@@ -54,7 +54,7 @@ public class LoginController {
         if (currUser != null) {
             String roleName = currUser.getRole() != null ? currUser.getRole().getRoleName() : "";
 
-            if ("CINEMA_ADMIN".equals(roleName) || "SUPER_ADMIN".equals(roleName)) {
+            if ("CINEMA_ADMIN".equals(roleName)) {
                 session.invalidate();
             }
         }
