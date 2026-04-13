@@ -18,6 +18,15 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+
+        .fade-message {
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .fade-out {
+            opacity: 0;
+        }
     </style>
 </head>
 
@@ -35,17 +44,17 @@
                 </div>
 
                 <div class="hidden md:flex items-center space-x-8 font-semibold text-sm">
-                    <a href="/admin/rooms" class="text-red-700 font-bold border-b-2 border-red-700">
+                    <a href="${pageContext.request.contextPath}/admin/rooms" class="text-red-700 font-bold border-b-2 border-red-700">
                         Phòng chiếu
                     </a>
                 </div>
 
                 <div class="flex items-center gap-4">
-                <span class="font-bold text-sm">
-                        ${sessionScope.currentUser.fullName}
-                </span>
+                    <span class="font-bold text-sm">
+                            ${sessionScope.currentUser.fullName}
+                    </span>
 
-                    <a href="/logout"
+                    <a href="${pageContext.request.contextPath}/logout"
                        class="bg-red-600 text-white px-6 py-2 rounded-full font-bold hover:bg-red-700">
                         Đăng xuất
                     </a>
@@ -60,38 +69,55 @@
 
                 <h1 class="text-3xl font-bold">Quản lý phòng chiếu</h1>
 
-                <!-- 🔍 SEARCH + ADD -->
-                <div class="flex justify-between items-center">
+                <!-- SUCCESS MESSAGE -->
+                <c:if test="${not empty message}">
+                    <div id="successBox"
+                         class="fade-message bg-green-100 text-green-700 border border-green-200 px-4 py-3 rounded-lg">
+                            ${message}
+                    </div>
+                </c:if>
+
+                <!-- ERROR MESSAGE -->
+                <c:if test="${not empty error}">
+                    <div id="errorBox"
+                         class="fade-message bg-red-100 text-red-700 border border-red-300 px-4 py-3 rounded-lg">
+                        ${error}
+                    </div>
+                </c:if>
+
+                <!-- SEARCH + ADD -->
+                <div class="flex justify-between items-center gap-4 flex-wrap">
 
                     <!-- SEARCH -->
-                    <form method="get" action="/admin/rooms" class="flex gap-2">
+                    <form method="get" action="${pageContext.request.contextPath}/admin/rooms" class="flex gap-2">
                         <input type="text" name="keyword" value="${keyword}"
                                placeholder="Tìm phòng..."
                                class="border px-4 py-2 rounded-lg w-64"/>
 
-                        <button class="bg-blue-500 text-white px-4 py-2 rounded-lg">
+                        <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
                             Tìm
                         </button>
                     </form>
 
                     <!-- ADD -->
-                    <a href="/admin/rooms/create"
-                       class="bg-green-500 text-white px-5 py-2 rounded-lg font-bold hover:bg-green-600">
+                    <button type="button"
+                            onclick="openAddModal()"
+                            class="bg-green-500 text-white px-5 py-2 rounded-lg font-bold hover:bg-green-600">
                         + Thêm phòng
-                    </a>
+                    </button>
 
                 </div>
 
                 <!-- CARD -->
-                <div class="bg-white rounded-xl shadow p-6">
+                <div class="bg-white rounded-xl shadow p-6 overflow-x-auto">
 
-                    <table class="w-full text-center border-collapse">
+                    <table class="w-full text-center border-collapse min-w-[700px]">
 
                         <thead class="border-b bg-gray-100">
                         <tr>
                             <th class="py-3">ID</th>
                             <th>Tên phòng</th>
-                            <th>Số ghế</th>
+                            <th>Tổng số ghế</th>
                             <th>Action</th>
                         </tr>
                         </thead>
@@ -105,27 +131,30 @@
                                 <td>${r.roomName}</td>
                                 <td>${r.totalSeats}</td>
 
-                                <td class="flex justify-center gap-2 py-3">
+                                <td class="py-3">
+                                    <div class="flex justify-center gap-2 flex-wrap">
 
-                                    <!-- SỬA -->
-                                    <a href="/admin/rooms/edit/${r.roomId}"
-                                       class="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600">
-                                        Sửa
-                                    </a>
+                                        <!-- SỬA -->
+                                        <button type="button"
+                                                onclick="openEditModal('${r.roomId}', '${r.roomName}', '${r.totalSeats}')"
+                                                class="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600">
+                                            Sửa
+                                        </button>
 
-                                    <!-- XÓA -->
-                                    <a href="/admin/rooms/delete/${r.roomId}"
-                                       onclick="return confirm('Bạn chắc chắn muốn xóa phòng này?')"
-                                       class="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600">
-                                        Xóa
-                                    </a>
+                                        <!-- XÓA -->
+                                        <a href="${pageContext.request.contextPath}/admin/rooms/delete/${r.roomId}"
+                                           onclick="return confirm('Bạn chắc chắn muốn xóa phòng này?')"
+                                           class="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600">
+                                            Xóa
+                                        </a>
 
-                                    <!-- GHẾ -->
-                                    <a href="/admin/seats/${r.roomId}"
-                                       class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600">
-                                        Ghế
-                                    </a>
+                                        <!-- GHẾ -->
+                                        <a href="${pageContext.request.contextPath}/admin/seats/${r.roomId}"
+                                           class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600">
+                                            Ghế
+                                        </a>
 
+                                    </div>
                                 </td>
 
                             </tr>
@@ -147,10 +176,144 @@
             </div>
         </main>
 
+        <!-- ADD ROOM MODAL -->
+        <div id="addRoomModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[60] px-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+                <div class="flex items-center justify-between px-6 py-4 border-b">
+                    <h2 class="text-xl font-bold">Thêm phòng chiếu</h2>
+                    <button type="button" onclick="closeAddModal()" class="text-gray-500 text-2xl leading-none">&times;</button>
+                </div>
+
+                <form action="${pageContext.request.contextPath}/admin/rooms/save" method="post" class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Tên phòng</label>
+                        <input type="text" name="roomName" placeholder="Ví dụ: Phòng 1"
+                               class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Tổng số ghế</label>
+                        <input type="number" name="totalSeats" min="1" placeholder="Ví dụ: 80"
+                               class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400" required>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" onclick="closeAddModal()"
+                                class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100">
+                            Hủy
+                        </button>
+                        <button type="submit"
+                                class="px-5 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600">
+                            Lưu phòng
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- EDIT ROOM MODAL -->
+        <div id="editRoomModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[60] px-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+                <div class="flex items-center justify-between px-6 py-4 border-b">
+                    <h2 class="text-xl font-bold">Sửa phòng chiếu</h2>
+                    <button type="button" onclick="closeEditModal()" class="text-gray-500 text-2xl leading-none">&times;</button>
+                </div>
+
+                <form action="${pageContext.request.contextPath}/admin/rooms/save" method="post" class="p-6 space-y-4">
+                    <input type="hidden" name="roomId" id="editRoomId">
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Tên phòng</label>
+                        <input type="text" name="roomName" id="editRoomName"
+                               class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Tổng số ghế</label>
+                        <input type="number" name="totalSeats" id="editTotalSeats" min="1"
+                               class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400" required>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" onclick="closeEditModal()"
+                                class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100">
+                            Hủy
+                        </button>
+                        <button type="submit"
+                                class="px-5 py-2 rounded-lg bg-yellow-500 text-white font-semibold hover:bg-yellow-600">
+                            Cập nhật
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            function openAddModal() {
+                const modal = document.getElementById('addRoomModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            function closeAddModal() {
+                const modal = document.getElementById('addRoomModal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            function openEditModal(roomId, roomName, totalSeats) {
+                document.getElementById('editRoomId').value = roomId;
+                document.getElementById('editRoomName').value = roomName;
+                document.getElementById('editTotalSeats').value = totalSeats;
+
+                const modal = document.getElementById('editRoomModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            function closeEditModal() {
+                const modal = document.getElementById('editRoomModal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            window.addEventListener('click', function (event) {
+                const addModal = document.getElementById('addRoomModal');
+                const editModal = document.getElementById('editRoomModal');
+
+                if (event.target === addModal) {
+                    closeAddModal();
+                }
+
+                if (event.target === editModal) {
+                    closeEditModal();
+                }
+            });
+
+            setTimeout(function () {
+                const successBox = document.getElementById("successBox");
+                const errorBox = document.getElementById("errorBox");
+
+                if (successBox) {
+                    successBox.classList.add("fade-out");
+                    setTimeout(function () {
+                        successBox.style.display = "none";
+                    }, 500);
+                }
+
+                if (errorBox) {
+                    errorBox.classList.add("fade-out");
+                    setTimeout(function () {
+                        errorBox.style.display = "none";
+                    }, 500);
+                }
+            }, 3000);
+        </script>
+
     </c:when>
 
     <c:otherwise>
-        <script>window.location = '/login'</script>
+        <script>window.location = '${pageContext.request.contextPath}/login'</script>
     </c:otherwise>
 </c:choose>
 

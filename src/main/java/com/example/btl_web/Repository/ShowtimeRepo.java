@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ShowtimeRepo extends JpaRepository<Showtime, Integer> {
     List<Showtime> findByMovie_MovieId(Integer movieId);
+    long countByRoom_RoomId(int roomId);
 }

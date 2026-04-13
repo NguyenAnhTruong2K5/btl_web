@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface SeatRepo extends JpaRepository<Seat, Integer> {
     List<Seat> findByRoom_RoomId(Integer roomId);
+    long countByRoom_RoomId(int roomId);
 }

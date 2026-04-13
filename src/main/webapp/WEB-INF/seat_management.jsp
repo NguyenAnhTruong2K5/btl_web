@@ -25,6 +25,7 @@
             font-size: 12px;
             font-weight: bold;
             cursor: pointer;
+            transition: 0.2s;
         }
 
         .seat-normal {
@@ -68,6 +69,14 @@
         <main class="pt-28 px-6">
             <div class="max-w-5xl mx-auto">
 
+                <!-- NÚT QUAY LẠI -->
+                <div class="mb-4">
+                    <a href="${pageContext.request.contextPath}/admin/rooms"
+                       class="inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-lg font-medium transition">
+                        ← Quay lại quản lý phòng
+                    </a>
+                </div>
+
                 <h1 class="text-3xl font-bold mb-6">Quản lý ghế</h1>
 
                 <!-- MÀN HÌNH -->
@@ -79,11 +88,9 @@
 
                 <!-- GHẾ -->
                 <div class="bg-white p-6 rounded-xl shadow">
-
                     <div class="flex flex-col items-center gap-3">
 
                         <c:forEach var="row" items="${seats.stream().map(s -> s.seatRow).distinct().toList()}">
-
                             <div class="flex gap-2 items-center">
 
                                 <!-- Tên hàng -->
@@ -92,7 +99,6 @@
                                 <!-- Ghế trong hàng -->
                                 <c:forEach var="s" items="${seats}">
                                     <c:if test="${s.seatRow == row}">
-
                                         <form action="/admin/seats/update" method="post">
                                             <input type="hidden" name="seatId" value="${s.seatId}" />
 
@@ -101,21 +107,17 @@
                                                     ${s.seatNumber}
                                             </button>
                                         </form>
-
                                     </c:if>
                                 </c:forEach>
 
                             </div>
-
                         </c:forEach>
 
                     </div>
-
                 </div>
 
                 <!-- CHÚ THÍCH -->
                 <div class="flex justify-center gap-6 mt-6">
-
                     <div class="flex items-center gap-2">
                         <div class="w-5 h-5 bg-green-500 rounded"></div>
                         <span>Ghế thường</span>
@@ -125,7 +127,6 @@
                         <div class="w-5 h-5 bg-yellow-400 rounded"></div>
                         <span>Ghế VIP</span>
                     </div>
-
                 </div>
 
             </div>
