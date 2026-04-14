@@ -64,7 +64,22 @@
 </head>
 <body>
 <div class="container">
-    <h1>Trang quản lý Cinema Admin</h1>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h1 style="margin:0; color:#bb000c;">Trang quản lý Cinema Admin</h1>
+
+        <a href="${pageContext.request.contextPath}/logout"
+           style="
+           display:inline-block;
+           background:#bb000c;
+           color:white;
+           text-decoration:none;
+           padding:10px 18px;
+           border-radius:10px;
+           font-weight:600;
+       ">
+            Đăng xuất
+        </a>
+    </div>
     <div class="subtitle">Chọn chức năng bạn muốn quản lý.</div>
 
     <div class="cinema-box">

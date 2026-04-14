@@ -110,6 +110,15 @@
                                 </span>
                             </div>
 
+                            <div class="flex flex-col">
+                                <span class="text-xs text-gray-500 flex items-center gap-1 mb-1">
+                                    <span class="material-symbols-outlined text-[14px]">confirmation_number</span>
+                                    Thời gian thanh toán
+                                </span>
+                                <span class="font-semibold text-gray-700 bg-gray-50 px-2.5 py-1 rounded-md w-fit border border-gray-200 text-sm font-mono">
+                                    ${payment.paymentTime}
+                                </span>
+                            </div>
                         </div>
 
                         <div class="shrink-0 flex flex-row md:flex-col items-center justify-between md:items-end w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0 gap-3">

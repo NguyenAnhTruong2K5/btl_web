@@ -207,7 +207,22 @@
 <body>
 <div class="page">
   <div class="card">
-    <h1 class="page-title">Chi tiết đơn vé #${booking.bookingId}</h1>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h1 class="page-title" style="margin:0; color:#bb000c;">Chi tiết đơn vé #${booking.bookingId}</h1>
+
+      <a href="${pageContext.request.contextPath}/logout"
+         style="
+           display:inline-block;
+           background:#bb000c;
+           color:white;
+           text-decoration:none;
+           padding:10px 18px;
+           border-radius:10px;
+           font-weight:600;
+       ">
+        Đăng xuất
+      </a>
+    </div>
     <p class="page-subtitle">Theo dõi thông tin booking, thanh toán và thao tác xử lý đơn.</p>
 
     <c:if test="${not empty successMsg}">
@@ -291,10 +306,10 @@
         <div class="value">
           <c:choose>
             <c:when test="${payment != null}">
-              ${payment.paymentStatus}
+              Đã thanh toán
             </c:when>
             <c:otherwise>
-              Chưa có thanh toán
+              Chưa thanh toán
             </c:otherwise>
           </c:choose>
         </div>

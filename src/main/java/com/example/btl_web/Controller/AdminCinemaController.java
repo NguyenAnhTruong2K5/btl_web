@@ -30,7 +30,7 @@ public class AdminCinemaController {
         if (!"ADMIN_CINEMA".equalsIgnoreCase(roleName)
                 && !"CINEMA_ADMIN".equalsIgnoreCase(roleName)
                 && !"ADMINCINEMA".equalsIgnoreCase(roleName)) {
-            return "redirect:/";
+            return "redirect:/login";
         }
 
         Optional<Admin> adminOpt = adminRepo.findByUserUserId(currentUser.getUserId());

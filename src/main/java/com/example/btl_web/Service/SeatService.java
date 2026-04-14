@@ -15,7 +15,7 @@ public class SeatService {
             return false;
         }
 
-        return seatStatus.getStatus().equals("available");
+        return seatStatus.getStatus().equals("AVAILABLE");
     }
 
     public void setSeatStatus(Integer seatId, String status) {

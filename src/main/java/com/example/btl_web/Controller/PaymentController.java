@@ -165,6 +165,7 @@ public class PaymentController {
                 paymentDTO.setTicketId(ticket.getTicketId());
                 paymentDTO.setPaymentId(payment.getPaymentId());
                 paymentDTO.setBookingId(bookingId);
+                paymentDTO.setPaymentTime(payment.getPaymentTime());
 
                 paymentDTOList.add(paymentDTO);
             }

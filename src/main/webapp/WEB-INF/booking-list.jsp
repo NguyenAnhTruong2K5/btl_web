@@ -228,8 +228,22 @@
 <body>
 <div class="page">
     <div class="card">
-        <h1 class="page-title">Quản lý đơn vé</h1>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h1 style="margin:0; color:#bb000c;">Quản lý đơn vé</h1>
 
+            <a href="${pageContext.request.contextPath}/logout"
+               style="
+           display:inline-block;
+           background:#bb000c;
+           color:white;
+           text-decoration:none;
+           padding:10px 18px;
+           border-radius:10px;
+           font-weight:600;
+       ">
+                Đăng xuất
+            </a>
+        </div>
         <c:if test="${not empty cinemas}">
             <p class="managed-cinema">Rạp đang quản lý: <span>${cinemas[0].cinemaName}</span></p>
         </c:if>

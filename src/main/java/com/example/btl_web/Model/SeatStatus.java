@@ -25,5 +25,5 @@ public class SeatStatus {
     @JoinColumn(name = "seat_id")
     private Seat seat;
 
-    private String status; // available, booked, maintenance
+    private String status; // AVAILABLE, BOOKED
 }

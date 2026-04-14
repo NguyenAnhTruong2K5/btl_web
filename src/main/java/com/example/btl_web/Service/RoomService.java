@@ -13,13 +13,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RoomService {
     private final SeatRepo seatRepo;
-    private final SeatStatusRepo seatStatusRepo;
+    private final SeatService seatService;
+
     public boolean isRoomFull(Integer roomId) {
         List<Seat> seatList = seatRepo.findByRoom_RoomId(roomId);
         int availableSeat = 0;
         for (Seat seat : seatList) {
-            SeatStatus seatStatus = seatStatusRepo.findBySeat_SeatId(seat.getSeatId()).orElse(null);
-            if (seatStatus != null && seatStatus.getStatus().equals("available")) {
+            if (seatService.isSeatAvailable(seat.getSeatId())) {
                 availableSeat += 1;
             }
         }

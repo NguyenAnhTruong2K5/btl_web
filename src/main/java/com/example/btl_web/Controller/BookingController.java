@@ -173,7 +173,6 @@ public class BookingController {
             } // Trả lại trạng thái cho ghế đã chọn trước đó mà giờ không chọn nữa
         }
 
-
         session.setAttribute("pre_selected_seat", currSeatIdList);
         currBooking.setSeatIdList(currSeatIdList);
 
