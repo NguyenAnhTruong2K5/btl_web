@@ -26,10 +26,11 @@ public class Movie {
     @Column(name= "poster", columnDefinition = "TEXT")
     private String poster;
 
+    @Column(name = "trailer", columnDefinition = "TEXT")
     private String trailer;
 
     private LocalDate releaseDate;
-    private String status;
+    private String status; // Đang chiếu, Sắp chiếu
 
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
