@@ -28,13 +28,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @RequestMapping("/")
 public class LoginController {
+
     private final UserRepo userRepo;
     private final RoleRepo roleRepo;
     private final MovieRepo movieRepo;
     private final CinemaRepo cinemaRepo;
 
     @GetMapping("/")
-    public String indexPage(Model model, HttpSession session) {
+    public String indexPage(@RequestParam(required = false) String keyword, Model model, HttpSession session) {
         List<Movie> nowShowing = movieRepo.findByStatus("Đang chiếu");
         List<Movie> uniqueNowShowing = new ArrayList<>(nowShowing.stream()
                 .collect(Collectors.toMap(Movie::getTitle, m -> m, (existing, replacement) -> existing))
@@ -46,8 +47,20 @@ public class LoginController {
                 .collect(Collectors.toMap(Movie::getTitle, m -> m, (existing, replacement) -> existing))
                 .values());
 
+        String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        if (!normalizedKeyword.isEmpty()) {
+            uniqueNowShowing = uniqueNowShowing.stream()
+                    .filter(movie -> matchesMovieKeyword(movie, normalizedKeyword))
+                    .collect(Collectors.toList());
+
+            uniqueUpcoming = uniqueUpcoming.stream()
+                    .filter(movie -> matchesMovieKeyword(movie, normalizedKeyword))
+                    .collect(Collectors.toList());
+        }
+
         model.addAttribute("nowShowingMovies", uniqueNowShowing);
         model.addAttribute("upcomingMovies", uniqueUpcoming);
+        model.addAttribute("keyword", normalizedKeyword);
 
         User currUser = (User) session.getAttribute("currentUser");
 
@@ -71,15 +84,24 @@ public class LoginController {
     public String loginSubmit(@RequestParam String username,
             @RequestParam String password,
             HttpSession session,
-            Model model) 
-    {
+            RedirectAttributes redirectAttributes) {
+
+        if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("loginError", "Vui lòng nhập đầy đủ email/số điện thoại và mật khẩu.");
+            redirectAttributes.addFlashAttribute("loginUsername", username);
+            return "redirect:/login";
+        }
 
         User user = userRepo.findByEmail(username).orElse(userRepo.findByPhone(username).orElse(null));
         if (user == null) {
+            redirectAttributes.addFlashAttribute("loginError", "Tài khoản không tồn tại. Vui lòng kiểm tra lại.");
+            redirectAttributes.addFlashAttribute("loginUsername", username);
             return "redirect:/login";
         }
 
         if (!user.getPassword().equals(password)) {
+            redirectAttributes.addFlashAttribute("loginError", "Mật khẩu không chính xác. Vui lòng thử lại.");
+            redirectAttributes.addFlashAttribute("loginUsername", username);
             return "redirect:/login";
         }
 
@@ -97,8 +119,6 @@ public class LoginController {
 //        if ("CINEMA_ADMIN".equalsIgnoreCase(roleName)) {
 //            return "redirect:/admin/rooms";
 //        } Phong
-
-
         return "redirect:/";
     }
 
@@ -209,12 +229,21 @@ public class LoginController {
     }
 
     @GetMapping("/now-showing")
-    public String nowShowingPage(Model model) {
+    public String nowShowingPage(@RequestParam(required = false) String keyword, Model model) {
         List<Movie> nowShowing = movieRepo.findByStatus("Đang chiếu");
         List<Movie> uniqueNowShowing = new ArrayList<>(nowShowing.stream()
                 .collect(Collectors.toMap(Movie::getTitle, m -> m, (existing, replacement) -> existing))
                 .values());
+
+        String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        if (!normalizedKeyword.isEmpty()) {
+            uniqueNowShowing = uniqueNowShowing.stream()
+                    .filter(movie -> matchesMovieKeyword(movie, normalizedKeyword))
+                    .collect(Collectors.toList());
+        }
+
         model.addAttribute("nowShowingMovies", uniqueNowShowing);
+        model.addAttribute("keyword", normalizedKeyword);
         return "now-showing";
     }
 
@@ -295,6 +324,13 @@ public class LoginController {
     @GetMapping("/promotion")
     public String promotionPage() {
         return "promotion";
+    }
+
+    private boolean matchesMovieKeyword(Movie movie, String keyword) {
+        if (movie == null || movie.getTitle() == null) {
+            return false;
+        }
+        return movie.getTitle().toLowerCase().contains(keyword.toLowerCase());
     }
 
     @GetMapping("/change-password")

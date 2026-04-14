@@ -9,8 +9,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin/movies")
@@ -21,17 +24,34 @@ public class MovieController {
     private final ShowtimeRepo showtimeRepo;
 
     @GetMapping
-    public String moviesPage(@RequestParam(required = false) String keyword, Model model) {
+    public String moviesPage(@RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            Model model) {
         List<Movie> movies;
+        String normalizedStatus = normalizeStatus(status);
+        String trimmedKeyword = keyword == null ? null : keyword.trim();
 
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            movies = movieRepo.findByTitleContainingIgnoreCase(keyword.trim());
+        boolean hasKeyword = trimmedKeyword != null && !trimmedKeyword.isEmpty();
+        boolean hasStatus = normalizedStatus != null && !normalizedStatus.isEmpty();
+
+        if (hasKeyword && hasStatus) {
+            String loweredKeyword = trimmedKeyword == null ? "" : trimmedKeyword.toLowerCase();
+            movies = movieRepo.findByStatus(normalizedStatus)
+                    .stream()
+                    .filter(movie -> movie.getTitle() != null
+                    && movie.getTitle().toLowerCase().contains(loweredKeyword))
+                    .collect(Collectors.toList());
+        } else if (hasKeyword) {
+            movies = movieRepo.findByTitleContainingIgnoreCase(trimmedKeyword);
+        } else if (hasStatus) {
+            movies = movieRepo.findByStatus(normalizedStatus);
         } else {
             movies = movieRepo.findAll();
         }
 
         model.addAttribute("movies", movies);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("status", normalizedStatus);
 
         return "movies_management";
     }
@@ -45,7 +65,7 @@ public class MovieController {
 
     @PostMapping("/create")
     public String createMovie(@ModelAttribute Movie movie,
-                              RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes) {
 
         if (movie.getTitle() == null || movie.getTitle().trim().isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Tên phim không được để trống!");
@@ -57,19 +77,21 @@ public class MovieController {
             return "redirect:/admin/movies/create";
         }
 
-        if (movie.getStatus() == null || movie.getStatus().trim().isEmpty()) {
-            movie.setStatus("ACTIVE");
+        String normalizedStatus = normalizeStatus(movie.getStatus());
+        if (normalizedStatus == null || normalizedStatus.isEmpty()) {
+            normalizedStatus = "Đang chiếu";
         }
+        movie.setStatus(normalizedStatus);
 
         movieRepo.save(movie);
         redirectAttributes.addFlashAttribute("message", "Thêm phim thành công!");
-        return "redirect:/admin/movies";
+        return "redirect:/admin/movies?status=" + URLEncoder.encode(normalizedStatus, StandardCharsets.UTF_8);
     }
 
     @GetMapping("/edit/{id}")
     public String editForm(@PathVariable Integer id,
-                           Model model,
-                           RedirectAttributes redirectAttributes) {
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
         Optional<Movie> optionalMovie = movieRepo.findById(id);
 
@@ -85,7 +107,7 @@ public class MovieController {
 
     @PostMapping("/update")
     public String updateMovie(@ModelAttribute Movie movie,
-                              RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes) {
 
         if (movie.getMovieId() == null || !movieRepo.existsById(movie.getMovieId())) {
             redirectAttributes.addFlashAttribute("error", "Phim không tồn tại!");
@@ -114,16 +136,20 @@ public class MovieController {
         existingMovie.setPoster(movie.getPoster());
         existingMovie.setTrailer(movie.getTrailer());
         existingMovie.setReleaseDate(movie.getReleaseDate());
-        existingMovie.setStatus(movie.getStatus());
+        String normalizedStatus = normalizeStatus(movie.getStatus());
+        if (normalizedStatus == null || normalizedStatus.isEmpty()) {
+            normalizedStatus = "Đang chiếu";
+        }
+        existingMovie.setStatus(normalizedStatus);
 
         movieRepo.save(existingMovie);
         redirectAttributes.addFlashAttribute("message", "Cập nhật phim thành công!");
-        return "redirect:/admin/movies";
+        return "redirect:/admin/movies?status=" + URLEncoder.encode(normalizedStatus, StandardCharsets.UTF_8);
     }
 
     @GetMapping("/delete/{id}")
     public String deleteMovie(@PathVariable Integer id,
-                              RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes) {
 
         if (!movieRepo.existsById(id)) {
             redirectAttributes.addFlashAttribute("error", "Phim không tồn tại!");
@@ -139,5 +165,26 @@ public class MovieController {
         movieRepo.deleteById(id);
         redirectAttributes.addFlashAttribute("message", "Xóa phim thành công!");
         return "redirect:/admin/movies";
+    }
+
+    private String normalizeStatus(String status) {
+        if (status == null) {
+            return null;
+        }
+
+        String normalized = status.trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+
+        if ("ACTIVE".equalsIgnoreCase(normalized) || "Đang chiếu".equalsIgnoreCase(normalized)) {
+            return "Đang chiếu";
+        }
+
+        if ("INACTIVE".equalsIgnoreCase(normalized) || "Sắp chiếu".equalsIgnoreCase(normalized)) {
+            return "Sắp chiếu";
+        }
+
+        return normalized;
     }
 }

@@ -92,6 +92,11 @@
                         <input type="text" name="keyword" value="${keyword}"
                                placeholder="Tìm phim..."
                                class="border rounded-lg px-4 py-2 w-80">
+                        <select name="status" class="border rounded-lg px-4 py-2">
+                            <option value="" ${empty status ? 'selected' : ''}>Tất cả trạng thái</option>
+                            <option value="Đang chiếu" ${status == 'Đang chiếu' ? 'selected' : ''}>Đang chiếu</option>
+                            <option value="Sắp chiếu" ${status == 'Sắp chiếu' ? 'selected' : ''}>Sắp chiếu</option>
+                        </select>
                         <button type="submit"
                                 class="bg-blue-500 text-white px-5 py-2 rounded-lg font-bold hover:bg-blue-600">
                             Tìm
@@ -126,14 +131,14 @@
                                 <td>${m.releaseDate}</td>
                                 <td>
                                     <c:choose>
-                                        <c:when test="${m.status == 'ACTIVE'}">
+                                        <c:when test="${m.status == 'Đang chiếu' || m.status == 'ACTIVE'}">
                                             <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold text-sm">
-                                                Đang hoạt động
+                                                Đang chiếu
                                             </span>
                                         </c:when>
                                         <c:otherwise>
                                             <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 font-semibold text-sm">
-                                                Tạm ngưng
+                                                Sắp chiếu
                                             </span>
                                         </c:otherwise>
                                     </c:choose>

@@ -90,6 +90,12 @@
                     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
                 }
 
+                /* Hide built-in password reveal icon so only one custom eye is shown */
+                input[type="password"]::-ms-reveal,
+                input[type="password"]::-ms-clear {
+                    display: none;
+                }
+
                 .bg-login-pattern {
                     background-image: radial-gradient(circle at 2px 2px, #dbdddd 1px, transparent 0);
                     background-size: 40px 40px;
@@ -143,7 +149,8 @@
                                         class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">alternate_email</span>
                                     <input name="username" id="identity"
                                         class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all duration-200 outline-none"
-                                        placeholder="name@example.com" type="text" required />
+                                        placeholder="name@example.com" type="text"
+                                        value="${not empty loginUsername ? loginUsername : param.username}" required />
                                 </div>
                             </div>
                             <!-- Password Input -->
@@ -155,12 +162,13 @@
                                     <span
                                         class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">lock</span>
                                     <input name="password" id="password"
-                                        class="w-full pl-12 pr-12 py-4 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all duration-200 outline-none"
+                                        class="w-full pl-12 pr-14 py-4 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all duration-200 outline-none"
                                         placeholder="••••••••" type="password" required />
-                                    <button
+                                    <button id="togglePassword"
                                         class="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface"
-                                        type="button">
-                                        <span class="material-symbols-outlined">visibility</span>
+                                        aria-label="Hiện mật khẩu" type="button">
+                                        <span id="togglePasswordIcon"
+                                            class="material-symbols-outlined">visibility</span>
                                     </button>
                                 </div>
                             </div>
@@ -233,6 +241,25 @@
                     </div>
                 </div>
             </footer>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const passwordInput = document.getElementById('password');
+                    const toggleButton = document.getElementById('togglePassword');
+                    const toggleIcon = document.getElementById('togglePasswordIcon');
+
+                    if (!passwordInput || !toggleButton || !toggleIcon) {
+                        return;
+                    }
+
+                    toggleButton.addEventListener('click', function () {
+                        const isHidden = passwordInput.type === 'password';
+                        passwordInput.type = isHidden ? 'text' : 'password';
+                        toggleIcon.textContent = isHidden ? 'visibility_off' : 'visibility';
+                        toggleButton.setAttribute('aria-label', isHidden ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+                    });
+                });
+            </script>
         </body>
 
         </html>

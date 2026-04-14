@@ -144,13 +144,16 @@
                             href="/promotion">Khuyến mãi</a>
                     </div>
                     <div class="flex items-center gap-4">
-                        <div class="relative hidden lg:block">
-                            <input
-                                class="bg-surface-container-low border-none rounded-full px-6 py-2 w-64 focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                        <form action="${pageContext.request.contextPath}/" method="get"
+                            class="relative hidden lg:block">
+                            <input name="keyword" value="${keyword}"
+                                class="bg-surface-container-low border-none rounded-full pl-6 pr-12 py-2 w-64 focus:ring-2 focus:ring-primary/20 transition-all text-sm"
                                 placeholder="Tìm kiếm phim..." type="text" />
-                            <span
-                                class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
-                        </div>
+                            <button type="submit"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-outline-variant hover:text-primary">
+                                <span class="material-symbols-outlined">search</span>
+                            </button>
+                        </form>
                         <c:choose>
                             <c:when test="${not empty sessionScope.currentUser}">
                                 <div class="relative profile-dropdown">
@@ -286,19 +289,21 @@
                                                 </div>
                                                 <p class="text-on-surface-variant text-sm line-clamp-2">
                                                     ${movie.description}</p>
-                                                <%-- 1. Generate the URL and store it in a variable called 'bookingUrl' --%>
-                                                <c:url var="bookingUrl" value="/booking/book">
-                                                    <c:param name="movie_id" value="${movie.movieId}" />
-                                                </c:url>
+                                                <%-- 1. Generate the URL and store it in a variable called 'bookingUrl'
+                                                    --%>
+                                                    <c:url var="bookingUrl" value="/booking/book">
+                                                        <c:param name="movie_id" value="${movie.movieId}" />
+                                                    </c:url>
 
-                                                <%-- 2. Use that variable in your anchor tag --%>
-                                                <a href="${bookingUrl}"
-                                                   class="w-full bg-surface-container-high hover:bg-primary hover:text-white text-on-surface font-bold py-3 rounded-full transition-colors flex justify-center items-center gap-2 group/btn">
-                                                    Đặt vé ngay
-                                                    <span class="material-symbols-outlined text-lg group-hover/btn:translate-x-1 transition-transform">
-                                                        confirmation_number
-                                                    </span>
-                                                </a>
+                                                    <%-- 2. Use that variable in your anchor tag --%>
+                                                        <a href="${bookingUrl}"
+                                                            class="w-full bg-surface-container-high hover:bg-primary hover:text-white text-on-surface font-bold py-3 rounded-full transition-colors flex justify-center items-center gap-2 group/btn">
+                                                            Đặt vé ngay
+                                                            <span
+                                                                class="material-symbols-outlined text-lg group-hover/btn:translate-x-1 transition-transform">
+                                                                confirmation_number
+                                                            </span>
+                                                        </a>
                                             </div>
                                         </div>
                                     </c:if>

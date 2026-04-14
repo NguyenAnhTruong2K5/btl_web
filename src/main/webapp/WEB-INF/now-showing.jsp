@@ -131,13 +131,16 @@
                             href="/promotion">Khuyến mãi</a>
                     </div>
                     <div class="flex items-center gap-4">
-                        <div class="relative hidden lg:block">
-                            <input
-                                class="bg-surface-container-low border-none rounded-full px-6 py-2 w-64 focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                        <form action="${pageContext.request.contextPath}/now-showing" method="get"
+                            class="relative hidden lg:block">
+                            <input name="keyword" value="${keyword}"
+                                class="bg-surface-container-low border-none rounded-full pl-6 pr-12 py-2 w-64 focus:ring-2 focus:ring-primary/20 transition-all text-sm"
                                 placeholder="Tìm kiếm phim..." type="text" />
-                            <span
-                                class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
-                        </div>
+                            <button type="submit"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-outline-variant hover:text-primary">
+                                <span class="material-symbols-outlined">search</span>
+                            </button>
+                        </form>
                         <c:choose>
                             <c:when test="${not empty sessionScope.currentUser}">
                                 <div class="relative profile-dropdown">
@@ -263,6 +266,9 @@
                         </div>
                     </c:if>
                     <c:forEach var="movie" items="${nowShowingMovies}">
+                        <c:url var="bookingUrl" value="/booking/book">
+                            <c:param name="movie_id" value="${movie.movieId}" />
+                        </c:url>
                         <div class="group flex flex-col">
                             <div
                                 class="relative overflow-hidden rounded-2xl cinematic-shadow bg-surface-container aspect-[2/3] mb-6">
@@ -276,12 +282,9 @@
                                 <div
                                     class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
                                     <div class="flex gap-2 w-full">
-                                        <button
-                                            class="flex-1 bg-surface-container-lowest text-on-surface py-3 rounded-xl font-bold text-xs">Chi
-                                            tiết</button>
-                                        <button
-                                            class="flex-1 red-carpet-gradient text-white py-3 rounded-xl font-bold text-xs">Đặt
-                                            vé</button>
+                                        <a href="${bookingUrl}"
+                                            class="flex-1 red-carpet-gradient text-white py-3 rounded-xl font-bold text-xs text-center">Đặt
+                                            vé ngay</a>
                                     </div>
                                 </div>
                             </div>
