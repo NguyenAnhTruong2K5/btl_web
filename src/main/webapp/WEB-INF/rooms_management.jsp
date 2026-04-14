@@ -198,12 +198,6 @@
                 <form action="${pageContext.request.contextPath}/admin/rooms/create" method="post" class="p-6 space-y-4">
 
                     <div>
-                        <label class="block text-sm font-semibold mb-2">ID phòng</label>
-                        <input type="number" name="roomId" min="1" placeholder="Ví dụ: 1"
-                               class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400" required>
-                    </div>
-
-                    <div>
                         <label class="block text-sm font-semibold mb-2">Tên phòng</label>
                         <input type="text" name="roomName" placeholder="Ví dụ: Phòng 1"
                                class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400" required>

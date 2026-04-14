@@ -1,5 +1,8 @@
 package com.example.btl_web.Controller;
 
+import com.example.btl_web.Model.Admin;
+import com.example.btl_web.Model.User;
+import com.example.btl_web.Repository.AdminRepo;
 import com.example.btl_web.Repository.RoomRepo;
 import com.example.btl_web.Repository.SeatRepo;
 import com.example.btl_web.Repository.ShowtimeRepo;
@@ -11,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import com.example.btl_web.Model.Room;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.btl_web.Model.Seat;
+
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +27,7 @@ public class RoomController {
     private final RoomRepo roomRepo;
     private final SeatRepo seatRepo;
     private final ShowtimeRepo showtimeRepo;
+    private final AdminRepo adminRepo;
     // HIỂN THỊ + SEARCH
     @GetMapping
     public String roomsPage(@RequestParam(required = false) String keyword, Model model) {
@@ -40,23 +46,17 @@ public class RoomController {
         return "rooms_management";
     }
 
-    // FORM ADD
-    @GetMapping("/create")
-    public String createForm(Model model) {
-        model.addAttribute("room", new Room());
-        return "room_form";
-    }
-
     // SAVE (ADD + EDIT)
     @PostMapping("/create")
-    public String createRoom(Room room, RedirectAttributes redirectAttributes) {
-        if (room.getRoomId() == null) {
-            redirectAttributes.addFlashAttribute("error", "Vui lòng nhập ID phòng!");
-            return "redirect:/admin/rooms";
+    public String createRoom(Room room, RedirectAttributes redirectAttributes, HttpSession session) {
+
+        Admin admin = adminRepo.findByUser((User) session.getAttribute("currentUser")).orElse(null);
+        if (admin == null) {
+            return "redirect:/login";
         }
 
-        if (roomRepo.existsById(room.getRoomId())) {
-            redirectAttributes.addFlashAttribute("error", "ID phòng đã tồn tại, vui lòng nhập ID khác!");
+        if (room.getRoomName() == null || room.getRoomName().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Tên phòng không được để trống!");
             return "redirect:/admin/rooms";
         }
 
@@ -65,6 +65,8 @@ public class RoomController {
             return "redirect:/admin/rooms";
         }
 
+        room.setRoomId(null);
+        room.setCinema(admin.getCinema());
         Room savedRoom = roomRepo.save(room);
 
         List<Seat> seats = generateSeats(savedRoom, savedRoom.getTotalSeats());

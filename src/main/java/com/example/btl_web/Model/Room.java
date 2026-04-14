@@ -11,6 +11,7 @@ import lombok.Setter;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class Room {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer roomId;
 
     @ManyToOne
