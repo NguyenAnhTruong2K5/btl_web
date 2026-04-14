@@ -10,4 +10,6 @@ public interface SeatStatusRepo extends JpaRepository<SeatStatus, Integer> {
     List<SeatStatus> findByShowtime_ShowtimeId(Integer showtimeId);
     List<SeatStatus> findBySeat_SeatId(Integer seatId);
     Optional<SeatStatus> findBySeat_SeatIdAndShowtime_ShowtimeId(Integer seatId, Integer showtimeId);
+
+    void deleteByShowtime_ShowtimeId(Integer showtimeId);
 }

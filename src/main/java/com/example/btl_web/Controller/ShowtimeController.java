@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -202,17 +203,26 @@ public class ShowtimeController {
     }
 
     // XÓA
+    @Transactional
     @GetMapping("/delete/{id}")
     public String deleteShowtime(@PathVariable Integer id,
                                  RedirectAttributes redirectAttributes) {
 
-        if (!showtimeRepo.existsById(id)) {
-            redirectAttributes.addFlashAttribute("error", "Suất chiếu không tồn tại!");
-            return "redirect:/admin/showtimes";
+        try {
+            if (!showtimeRepo.existsById(id)) {
+                redirectAttributes.addFlashAttribute("error", "Suất chiếu không tồn tại!");
+                return "redirect:/admin/showtimes";
+            }
+
+            seatStatusRepo.deleteByShowtime_ShowtimeId(id);
+            showtimeRepo.deleteById(id);
+
+            redirectAttributes.addFlashAttribute("message", "Xóa suất chiếu thành công!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi xóa suất chiếu: " + e.getMessage());
         }
 
-        showtimeRepo.deleteById(id);
-        redirectAttributes.addFlashAttribute("message", "Xóa suất chiếu thành công!");
         return "redirect:/admin/showtimes";
     }
 
