@@ -94,8 +94,8 @@
         </a>
 
         <a class="card" href="${pageContext.request.contextPath}/admin/rooms">
-            <h3>Quản lý phòng chiếu & ghế</h3>
-            <p>Đi tới module quản lý phòng chiếu, ghế ngồi của rạp.</p>
+            <h3>Quản lý phòng chiếu, ghế, phim</h3>
+            <p>Thêm, sửa, xóa phòng chiếu, ghế, phim và quản lý suất chiếu.</p>
         </a>
     </div>
 </div>

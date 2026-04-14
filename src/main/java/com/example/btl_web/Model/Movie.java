@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,6 +28,9 @@ public class Movie {
     private String poster;
 
     private String trailer;
+
+    @Column(name = "release_date")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
 
     private LocalDate releaseDate;
     private String status;

@@ -223,6 +223,25 @@
         Đăng xuất
       </a>
     </div>
+    <div style="margin-bottom:24px;">
+      <a href="${pageContext.request.contextPath}/admin/bookings"
+         style="
+           display:inline-flex;
+           align-items:center;
+           background:#e5e7eb;
+           color:#111827;
+           text-decoration:none;
+           padding:12px 18px;
+           border-radius:14px;
+           font-weight:500;
+           font-size:16px;
+           transition:0.2s ease;
+       "
+         onmouseover="this.style.background='#d1d5db'"
+         onmouseout="this.style.background='#e5e7eb'">
+        ← Quản lý đơn vé
+      </a>
+    </div>
     <p class="page-subtitle">Theo dõi thông tin booking, thanh toán và thao tác xử lý đơn.</p>
 
     <c:if test="${not empty successMsg}">

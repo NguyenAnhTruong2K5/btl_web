@@ -244,6 +244,25 @@
                 Đăng xuất
             </a>
         </div>
+        <div style="margin-bottom:24px;">
+            <a href="${pageContext.request.contextPath}/admin/cinema"
+               style="
+           display:inline-flex;
+           align-items:center;
+           gap:8px;
+           background:#e5e7eb;
+           color:#111827;
+           text-decoration:none;
+           padding:10px 16px;
+           border-radius:10px;
+           font-weight:500;
+           transition:0.2s ease;
+       "
+               onmouseover="this.style.background='#d1d5db'"
+               onmouseout="this.style.background='#e5e7eb'">
+                ← Dashboard
+            </a>
+        </div>
         <c:if test="${not empty cinemas}">
             <p class="managed-cinema">Rạp đang quản lý: <span>${cinemas[0].cinemaName}</span></p>
         </c:if>

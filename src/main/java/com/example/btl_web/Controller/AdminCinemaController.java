@@ -27,9 +27,7 @@ public class AdminCinemaController {
         User currentUser = (User) obj;
         String roleName = currentUser.getRole() != null ? currentUser.getRole().getRoleName() : "";
 
-        if (!"ADMIN_CINEMA".equalsIgnoreCase(roleName)
-                && !"CINEMA_ADMIN".equalsIgnoreCase(roleName)
-                && !"ADMINCINEMA".equalsIgnoreCase(roleName)) {
+        if (!"CINEMA_ADMIN".equals(roleName)) {
             return "redirect:/login";
         }
 

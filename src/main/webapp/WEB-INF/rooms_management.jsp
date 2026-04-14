@@ -44,7 +44,8 @@
                 </div>
 
                 <div class="hidden md:flex items-center space-x-8 font-semibold text-sm">
-                    <a href="${pageContext.request.contextPath}/admin/rooms" class="text-red-700 font-bold border-b-2 border-red-700">
+                    <a href="${pageContext.request.contextPath}/admin/rooms"
+                       class="text-red-700 font-bold border-b-2 border-red-700">
                         Phòng chiếu
                     </a>
 
@@ -53,8 +54,11 @@
                         Suất chiếu
                     </a>
 
+                    <a href="${pageContext.request.contextPath}/admin/movies"
+                       class="text-gray-800 font-semibold hover:text-red-600 pb-1">
+                        Phim
+                    </a>
                 </div>
-
                 <div class="flex items-center gap-4">
                     <span class="font-bold text-sm">
                             ${sessionScope.currentUser.fullName}
