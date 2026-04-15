@@ -49,7 +49,7 @@
 
                             <div class="hidden md:flex items-center space-x-8 font-headline text-sm">
 
-                                <a class="${pageContext.request.requestURI.contains('admin') && !pageContext.request.requestURI.contains('admins') ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
+                                <a class="text-neutral-700 hover:text-red-600"
                                     href="/superAdmin">Dashboard</a>
 
                                 <a class="${pageContext.request.requestURI.contains('theaters') ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"

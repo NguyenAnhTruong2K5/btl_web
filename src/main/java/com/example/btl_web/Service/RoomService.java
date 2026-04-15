@@ -1,29 +1,32 @@
 package com.example.btl_web.Service;
 
-import com.example.btl_web.Model.Seat;
-import com.example.btl_web.Model.SeatStatus;
-import com.example.btl_web.Repository.SeatRepo;
-import com.example.btl_web.Repository.SeatStatusRepo;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.example.btl_web.Model.SeatStatus;
+import com.example.btl_web.Repository.SeatStatusRepo;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class RoomService {
-    private final SeatRepo seatRepo;
-    private final SeatService seatService;
 
-    public boolean isRoomFull(Integer roomId) {
-        List<Seat> seatList = seatRepo.findByRoom_RoomId(roomId);
-        int availableSeat = 0;
-        for (Seat seat : seatList) {
-            if (seatService.isSeatAvailable(seat.getSeatId())) {
-                availableSeat += 1;
+    private final SeatStatusRepo seatStatusRepo;
+
+    public boolean isRoomFull(Integer showtimeId) {
+        List<SeatStatus> seatStatuses = seatStatusRepo.findByShowtime_ShowtimeId(showtimeId);
+        if (seatStatuses.isEmpty()) {
+            return true;
+        }
+
+        for (SeatStatus seatStatus : seatStatuses) {
+            if ("AVAILABLE".equalsIgnoreCase(seatStatus.getStatus())) {
+                return false;
             }
         }
 
-        return availableSeat == 0;
+        return true;
     }
 }

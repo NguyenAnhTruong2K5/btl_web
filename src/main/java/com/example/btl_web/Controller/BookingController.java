@@ -1,25 +1,46 @@
 package com.example.btl_web.Controller;
 
-import com.example.btl_web.DTO.BookingDTO;
-import com.example.btl_web.DTO.CinemaShowtimeDTO;
-import com.example.btl_web.Model.*;
-import com.example.btl_web.Repository.*;
-import com.example.btl_web.Service.RoomService;
-import com.example.btl_web.Service.SeatService;
-import javax.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.example.btl_web.DTO.BookingDTO;
+import com.example.btl_web.DTO.CinemaShowtimeDTO;
+import com.example.btl_web.Model.Booking;
+import com.example.btl_web.Model.BookingHistory;
+import com.example.btl_web.Model.BookingSeat;
+import com.example.btl_web.Model.Cinema;
+import com.example.btl_web.Model.Seat;
+import com.example.btl_web.Model.Showtime;
+import com.example.btl_web.Model.User;
+import com.example.btl_web.Repository.BookingHistoryRepo;
+import com.example.btl_web.Repository.BookingRepo;
+import com.example.btl_web.Repository.BookingSeatRepo;
+import com.example.btl_web.Repository.CinemaRepo;
+import com.example.btl_web.Repository.SeatRepo;
+import com.example.btl_web.Repository.ShowtimeRepo;
+import com.example.btl_web.Repository.UserRepo;
+import com.example.btl_web.Service.RoomService;
+import com.example.btl_web.Service.SeatService;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/booking")
 public class BookingController {
+
     private final CinemaRepo cinemaRepo;
     private final ShowtimeRepo showtimeRepo;
     private final SeatRepo seatRepo;
@@ -68,8 +89,7 @@ public class BookingController {
         List<Showtime> availableRoomList = new ArrayList<>();
 
         for (Showtime showtime : showtimeList) {
-            Room room = showtime.getRoom();
-            if (!roomService.isRoomFull(room.getRoomId())) {
+            if (!roomService.isRoomFull(showtime.getShowtimeId())) {
                 availableRoomList.add(showtime);
             }
         }
@@ -96,6 +116,11 @@ public class BookingController {
         Integer cinemaId = request.getCinemaId();
         Integer showtimeId = request.getShowtimeId();
 
+        if (cinemaId == null || showtimeId == null) {
+            model.addFlashAttribute("msg", "Vui lòng chọn rạp và lịch chiếu");
+            return "redirect:/booking/cinema_showtime_room";
+        }
+
         Showtime showtime = showtimeRepo.findById(showtimeId).orElse(null);
         Cinema cinema = cinemaRepo.findById(cinemaId).orElse(null);
 
@@ -104,10 +129,26 @@ public class BookingController {
             return "redirect:/booking/cinema_showtime_room";
         }
 
+        if (showtime.getMovie() == null || !showtime.getMovie().getMovieId().equals(currBooking.getMovieId())) {
+            model.addFlashAttribute("msg", "Lịch chiếu không hợp lệ cho phim đã chọn");
+            return "redirect:/booking/cinema_showtime_room";
+        }
+
+        if (showtime.getRoom() == null || showtime.getRoom().getCinema() == null
+                || !showtime.getRoom().getCinema().getCinemaId().equals(cinemaId)) {
+            model.addFlashAttribute("msg", "Lịch chiếu không thuộc rạp đã chọn");
+            return "redirect:/booking/cinema_showtime_room";
+        }
+
+        if (roomService.isRoomFull(showtimeId)) {
+            model.addFlashAttribute("msg", "Suất chiếu đã hết chỗ, vui lòng chọn suất khác");
+            return "redirect:/booking/cinema_showtime_room";
+        }
+
         currBooking.setCinemaId(cinemaId);
         currBooking.setShowTimeId(showtimeId);
         currBooking.setRoomId(showtime.getRoom().getRoomId());
-        return "redirect:/booking/seat" ;
+        return "redirect:/booking/seat";
     }
 
     @GetMapping("/seat")
@@ -117,12 +158,11 @@ public class BookingController {
             return "redirect:/"; // Trang chủ người dùng
         }
 
-
         List<Seat> seatList = seatRepo.findByRoom_RoomId(currBooking.getRoomId());
         List<Seat> availableSeats = new ArrayList<>();
 
         for (Seat seat : seatList) {
-            if (seatService.isSeatAvailable(seat.getSeatId())) {
+            if (seatService.isSeatAvailable(seat.getSeatId(), currBooking.getShowTimeId())) {
                 availableSeats.add(seat);
             }
         }
@@ -158,8 +198,21 @@ public class BookingController {
             return "booking-seat";
         }
 
+        Integer showtimeId = currBooking.getShowTimeId();
+        if (showtimeId == null) {
+            model.addAttribute("error_msg", "Thông tin suất chiếu không hợp lệ, vui lòng chọn lại!");
+            return "booking-seat";
+        }
+
         for (Integer seatId : currSeatIdList) {
-            seatService.setSeatStatus(seatId, "BOOKED");
+            if (!seatService.isSeatAvailable(seatId, showtimeId)) {
+                model.addAttribute("error_msg", "Có ghế vừa được người khác chọn, vui lòng chọn lại.");
+                return "redirect:/booking/seat";
+            }
+        }
+
+        for (Integer seatId : currSeatIdList) {
+            seatService.setSeatStatus(seatId, showtimeId, "BOOKED");
         }
 
         @SuppressWarnings("unchecked")
@@ -168,7 +221,7 @@ public class BookingController {
         if (preSelectedSeatIdList != null) {
             for (Integer seatId : preSelectedSeatIdList) {
                 if (!currSeatIdList.contains(seatId)) {
-                    seatService.setSeatStatus(seatId, "available");
+                    seatService.setSeatStatus(seatId, showtimeId, "AVAILABLE");
                 }
             } // Trả lại trạng thái cho ghế đã chọn trước đó mà giờ không chọn nữa
         }
@@ -177,21 +230,24 @@ public class BookingController {
         currBooking.setSeatIdList(currSeatIdList);
 
         Integer userId = currBooking.getUserId();
-        User user = userRepo.findById(userId).orElse(null); assert user != null;
+        User user = userRepo.findById(userId).orElse(null);
+        assert user != null;
 
-        Integer movieId = currBooking.getMovieId();
-        Integer roomId = currBooking.getRoomId();
+        Showtime showtime = showtimeRepo.findById(showtimeId).orElse(null);
+        assert showtime != null;
 
-        Integer showtimeId = currBooking.getShowTimeId();
-        Showtime showtime = showtimeRepo.findById(showtimeId).orElse(null); assert showtime != null;
+        if (showtime.getPrice() == null || showtime.getPrice().signum() <= 0) {
+            model.addAttribute("error_msg", "Giá vé của suất chiếu chưa hợp lệ, vui lòng chọn suất khác.");
+            return "booking-seat";
+        }
 
-        Integer cinemaId = currBooking.getCinemaId();
         List<Integer> seatIdList = currBooking.getSeatIdList();
+        BigDecimal totalPrice = showtime.getPrice().multiply(BigDecimal.valueOf(seatIdList.size()));
 
         Booking booking = new Booking();
         booking.setUser(user);
         booking.setShowtime(showtime);
-        booking.setTotalPrice(showtime.getPrice());
+        booking.setTotalPrice(totalPrice);
         bookingRepo.save(booking);
 
         for (Integer seatId : seatIdList) {
@@ -223,8 +279,9 @@ public class BookingController {
 
         List<Integer> seatIdList = currBooking.getSeatIdList();
         if (seatIdList != null) {
+            Integer showtimeId = currBooking.getShowTimeId();
             for (Integer seatId : seatIdList) {
-                seatService.setSeatStatus(seatId, "available");
+                seatService.setSeatStatus(seatId, showtimeId, "AVAILABLE");
             }
         }
 

@@ -1,13 +1,15 @@
 package com.example.btl_web.Service;
 
-import com.example.btl_web.Repository.InvoiceRepo;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.example.btl_web.Repository.InvoiceRepo;
+import com.example.btl_web.Repository.PaymentRepo;
 
 @Service
 public class ReportService {
@@ -15,9 +17,16 @@ public class ReportService {
     @Autowired
     InvoiceRepo invoiceRepository;
 
-    public Double getTotalRevenue(){
+    @Autowired
+    PaymentRepo paymentRepo;
+
+    public Double getTotalRevenue() {
         Double revenue = invoiceRepository.totalRevenue();
         return revenue != null ? revenue : 0.0;
+    }
+
+    public Long getTotalTicketsSold() {
+        return paymentRepo.count();
     }
 
     // Lấy doanh thu theo ngày

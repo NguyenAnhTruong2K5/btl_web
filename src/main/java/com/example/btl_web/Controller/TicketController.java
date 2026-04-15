@@ -1,36 +1,49 @@
 package com.example.btl_web.Controller;
 
-import com.example.btl_web.DTO.TicketDTO;
-import com.example.btl_web.Model.*;
-import com.example.btl_web.Repository.*;
-import com.example.btl_web.Service.SeatService;
-import lombok.RequiredArgsConstructor;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpSession;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import javax.servlet.http.HttpSession;
-import java.util.ArrayList;
-import java.util.List;
+import com.example.btl_web.DTO.TicketDTO;
+import com.example.btl_web.Model.Booking;
+import com.example.btl_web.Model.BookingSeat;
+import com.example.btl_web.Model.Cinema;
+import com.example.btl_web.Model.Movie;
+import com.example.btl_web.Model.Room;
+import com.example.btl_web.Model.Seat;
+import com.example.btl_web.Model.Showtime;
+import com.example.btl_web.Model.Ticket;
+import com.example.btl_web.Model.User;
+import com.example.btl_web.Repository.BookingRepo;
+import com.example.btl_web.Repository.BookingSeatRepo;
+import com.example.btl_web.Repository.PaymentRepo;
+import com.example.btl_web.Repository.TicketRepo;
+import com.example.btl_web.Service.SeatService;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/ticket")
 public class TicketController {
-    private final MovieRepo movieRepo;
+
     private final TicketRepo ticketRepo;
     private final BookingRepo bookingRepo;
     private final BookingSeatRepo bookingSeatRepo;
-    private final SeatStatusRepo seatStatusRepo;
     private final PaymentRepo paymentRepo;
     private final SeatService seatService;
 
     @GetMapping("")
     public String viewTicketList(HttpSession session, Model model) {
         User user = (User) session.getAttribute("currentUser");
-        if (user == null ) {
+        if (user == null) {
             return "redirect:/login";
         }
 
@@ -38,8 +51,9 @@ public class TicketController {
         List<Ticket> ticketList = new ArrayList<>();
 
         for (Booking booking : bookingList) {
-            if (booking.getBookingStatus() != null && !booking.getBookingStatus().equals("CANCELED"))
+            if (booking.getBookingStatus() != null && !booking.getBookingStatus().equals("CANCELED")) {
                 ticketRepo.findByBooking_BookingId(booking.getBookingId()).ifPresent(ticketList::add);
+            }
         }
 
         List<TicketDTO> ticketDTOList = new ArrayList<>();
@@ -47,12 +61,11 @@ public class TicketController {
             TicketDTO ticketDTO = new TicketDTO();
             Booking booking = ticket.getBooking();
             String movieTitle = booking.getShowtime().getMovie().getTitle();
-            String bookingStatus = booking.getBookingStatus();
-            
+
             if (paymentRepo.findByBooking_BookingId(booking.getBookingId()).isPresent()) {
                 ticketDTO.setPaid(true);
             }
-            
+
             ticketDTO.setBookingId(ticket.getBooking().getBookingId());
             ticketDTO.setMovieName(movieTitle);
             ticketDTO.setCreateAt(ticket.getCreatedAt());
@@ -75,7 +88,6 @@ public class TicketController {
             return "redirect:/ticket";
         }
 
-
         Ticket ticket = ticketRepo.findByBooking_BookingId(bookingId).orElse(null);
         if (ticket == null) {
             Ticket newTicket = new Ticket();
@@ -97,12 +109,13 @@ public class TicketController {
         List<String> seatNameList = new ArrayList<>();
 
         if (bookingSeatList != null) {
+            Integer showtimeId = showtime.getShowtimeId();
             for (BookingSeat bookingSeat : bookingSeatList) {
                 Seat seat = bookingSeat.getSeat();
                 String seatRow = seat.getSeatRow();
                 Integer seatNumber = seat.getSeatNumber();
                 String seatName = seatRow + seatNumber;
-                seatService.setSeatStatus(bookingSeat.getSeat().getSeatId(), "BOOKED");
+                seatService.setSeatStatus(bookingSeat.getSeat().getSeatId(), showtimeId, "BOOKED");
                 seatNameList.add(seatName);
             }
         }
@@ -141,8 +154,9 @@ public class TicketController {
 
         List<BookingSeat> bookingSeatList = bookingSeatRepo.findByBooking(booking);
         if (bookingSeatList != null) {
+            Integer showtimeId = booking.getShowtime() != null ? booking.getShowtime().getShowtimeId() : null;
             for (BookingSeat bookingSeat : bookingSeatList) {
-                seatService.setSeatStatus(bookingSeat.getSeat().getSeatId(), "available");
+                seatService.setSeatStatus(bookingSeat.getSeat().getSeatId(), showtimeId, "AVAILABLE");
             }
         }
 

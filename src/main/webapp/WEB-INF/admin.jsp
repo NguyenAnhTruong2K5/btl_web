@@ -50,19 +50,19 @@
 
                             <div class="hidden md:flex items-center space-x-8 font-headline text-sm">
 
-                                <a class="${currentUri == '/admin' ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
+                                <a class="${currentUri == '/superAdmin' ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
                                     href="/superAdmin">Dashboard</a>
 
-                                <a class="${currentUri == '/admin/theaters' ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
+                                <a class="${currentUri == '/superAdmin/theaters' ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
                                     href="/superAdmin/theaters">Quản lý rạp</a>
 
-                                <a class="${currentUri == '/admin/users' ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
+                                <a class="${currentUri == '/superAdmin/users' ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
                                     href="/superAdmin/users">Quản lý người dùng</a>
 
-                                <a class="${currentUri == '/admin/admins' ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
+                                <a class="${currentUri == '/superAdmin/admins' ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
                                     href="/superAdmin/admins">Quản lý admin</a>
 
-                                <a class="${currentUri == '/admin/reports' ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
+                                <a class="${currentUri == '/superAdmin/reports' ? 'text-red-700 font-bold border-b-2 border-red-700' : 'text-neutral-700 hover:text-red-600'}"
                                     href="/superAdmin/reports">Báo cáo</a>
 
                             </div>
@@ -99,7 +99,7 @@
                                 </div>
 
                                 <div class="bg-white p-6 rounded-xl shadow">
-                                    <h3 class="text-gray-500">Vé đã bán</h3>
+                                    <h3 class="text-gray-500">Đơn đã bán</h3>
                                     <p class="text-3xl font-bold">${totalTickets}</p>
                                 </div>
 

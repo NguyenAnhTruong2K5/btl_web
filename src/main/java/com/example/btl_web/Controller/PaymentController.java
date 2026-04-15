@@ -1,26 +1,44 @@
 package com.example.btl_web.Controller;
 
-import com.example.btl_web.DTO.BookingDTO;
-import com.example.btl_web.DTO.InvoiceDTO;
-import com.example.btl_web.DTO.PaymentDTO;
-import com.example.btl_web.Model.*;
-import com.example.btl_web.Repository.*;
-import com.example.btl_web.Service.DiscountService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
-
-import javax.servlet.http.HttpSession;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.example.btl_web.DTO.InvoiceDTO;
+import com.example.btl_web.DTO.PaymentDTO;
+import com.example.btl_web.Model.Booking;
+import com.example.btl_web.Model.BookingDiscount;
+import com.example.btl_web.Model.Discount;
+import com.example.btl_web.Model.Invoice;
+import com.example.btl_web.Model.Payment;
+import com.example.btl_web.Model.Ticket;
+import com.example.btl_web.Model.User;
+import com.example.btl_web.Repository.BookingDiscountRepo;
+import com.example.btl_web.Repository.BookingRepo;
+import com.example.btl_web.Repository.DiscountRepo;
+import com.example.btl_web.Repository.InvoiceRepo;
+import com.example.btl_web.Repository.PaymentRepo;
+import com.example.btl_web.Repository.TicketRepo;
+import com.example.btl_web.Service.DiscountService;
+
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Controller
 @RequestMapping("/payment")
 public class PaymentController {
+
     private final BookingRepo bookingRepo;
     private final DiscountRepo discountRepo;
     private final InvoiceRepo invoiceRepo;
@@ -68,7 +86,8 @@ public class PaymentController {
     @PostMapping("/{booking_id}/invoice")
     public String processPayment(HttpSession session, @ModelAttribute("invoice_dto") InvoiceDTO invoiceDTO, Model model, @PathVariable("booking_id") Integer bookingId, @RequestParam("action") String action) {
         String discountCode = invoiceDTO.getDiscountCode();
-        Booking booking = bookingRepo.findById(bookingId).orElse(null); assert booking != null;
+        Booking booking = bookingRepo.findById(bookingId).orElse(null);
+        assert booking != null;
 
         if (action.equals("apply_discount")) {
             if (discountCode == null || !discountService.isDiscountAvailable(discountCode.trim())) {
@@ -78,7 +97,8 @@ public class PaymentController {
             }
 
             if (discountService.isDiscountAvailable(discountCode.trim())) {
-                Discount discount = discountRepo.findByCode(discountCode).orElse(null); assert discount != null;
+                Discount discount = discountRepo.findByCode(discountCode).orElse(null);
+                assert discount != null;
                 BookingDiscount bookingDiscount = new BookingDiscount();
                 BigDecimal currPrice = booking.getTotalPrice();
                 BigDecimal discountPercent = BigDecimal.valueOf(discount.getDiscountPercent());
@@ -102,7 +122,8 @@ public class PaymentController {
         if (action.equals("pay_now")) {
             if (discountCode != null) {
                 if (discountService.isDiscountAvailable(discountCode.trim())) {
-                    Discount discount = discountRepo.findByCode(discountCode).orElse(null); assert discount != null;
+                    Discount discount = discountRepo.findByCode(discountCode).orElse(null);
+                    assert discount != null;
                     BookingDiscount bookingDiscount = new BookingDiscount();
                     BigDecimal currPrice = booking.getTotalPrice();
                     BigDecimal discountPercent = BigDecimal.valueOf(discount.getDiscountPercent());
@@ -121,13 +142,14 @@ public class PaymentController {
 
             Invoice invoice = new Invoice();
             invoice.setAmount(invoiceDTO.getAmount());
+            invoice.setStatus("PAID");
             invoice.setBooking(booking);
             invoiceRepo.save(invoice);
 
             Payment payment = new Payment();
+            payment.setPaymentStatus("PAID");
             payment.setBooking(booking);
             paymentRepo.save(payment);
-
 
             Ticket ticket = ticketRepo.findByBooking_BookingId(bookingId).orElse(null);
             if (ticket != null) {

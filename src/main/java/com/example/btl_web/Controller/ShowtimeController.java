@@ -2,12 +2,14 @@ package com.example.btl_web.Controller;
 
 import com.example.btl_web.Model.*;
 import com.example.btl_web.Repository.*;
+import com.example.btl_web.Util.AuthorizationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -22,28 +24,50 @@ public class ShowtimeController {
     private final RoomRepo roomRepo;
     private final SeatStatusRepo seatStatusRepo;
     private final SeatRepo seatRepo;
+    private final BookingRepo bookingRepo;
+    private final AuthorizationUtil authorizationUtil;
 
     // HIỂN THỊ DANH SÁCH
     @GetMapping
-    public String showtimesPage(Model model) {
-        List<Showtime> showtimes = showtimeRepo.findAll();
+    public String showtimesPage(Model model, HttpServletRequest request) {
+        // Kiểm tra authorization
+        Integer cinemaId = authorizationUtil.getCurrentUserCinemaId(request);
+        if (cinemaId == null) {
+            return "redirect:/login";
+        }
+
+        // Lấy suất chiếu của cinema này
+        List<Showtime> showtimes = showtimeRepo.findByCinema_CinemaId(cinemaId);
         model.addAttribute("showtimes", showtimes);
         return "showtimes";
     }
 
     // FORM THÊM
     @GetMapping("/create")
-    public String createForm(Model model) {
+    public String createForm(Model model, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+        // Kiểm tra authorization
+        Integer cinemaId = authorizationUtil.getCurrentUserCinemaId(request);
+        if (cinemaId == null) {
+            return "redirect:/login";
+        }
+
         model.addAttribute("showtime", new Showtime());
-        model.addAttribute("movies", movieRepo.findAll());
-        model.addAttribute("rooms", roomRepo.findAll());
+        model.addAttribute("movies", movieRepo.findAll()); // Có thể giới hạn theo cinema nếu cần
+        // Chỉ lấy phòng của cinema này
+        model.addAttribute("rooms", roomRepo.findByCinema_CinemaId(cinemaId));
         return "add_showtime";
     }
 
     // THÊM SUẤT CHIẾU
     @PostMapping("/create")
     public String createShowtime(@ModelAttribute("showtime") Showtime showtime,
-                                 RedirectAttributes redirectAttributes) {
+                                 RedirectAttributes redirectAttributes,
+                                 HttpServletRequest request) {
+        // Kiểm tra authorization
+        Integer cinemaId = authorizationUtil.getCurrentUserCinemaId(request);
+        if (cinemaId == null) {
+            return "redirect:/login";
+        }
 
         try {
             if (showtime.getMovie() == null || showtime.getMovie().getMovieId() == null) {
@@ -81,6 +105,12 @@ public class ShowtimeController {
 
             if (room == null) {
                 redirectAttributes.addFlashAttribute("error", "Phòng không tồn tại!");
+                return "redirect:/admin/showtimes/create";
+            }
+
+            // Kiểm tra xem phòng có thuộc cinema hiện tại không
+            if (room.getCinema() == null || !room.getCinema().getCinemaId().equals(cinemaId)) {
+                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền tạo suất chiếu cho phòng này!");
                 return "redirect:/admin/showtimes/create";
             }
 
@@ -132,7 +162,13 @@ public class ShowtimeController {
     @GetMapping("/edit/{id}")
     public String editForm(@PathVariable Integer id,
                            Model model,
-                           RedirectAttributes redirectAttributes) {
+                           RedirectAttributes redirectAttributes,
+                           HttpServletRequest request) {
+        // Kiểm tra authorization
+        Integer cinemaId = authorizationUtil.getCurrentUserCinemaId(request);
+        if (cinemaId == null) {
+            return "redirect:/login";
+        }
 
         Optional<Showtime> optionalShowtime = showtimeRepo.findById(id);
 
@@ -141,19 +177,44 @@ public class ShowtimeController {
             return "redirect:/admin/showtimes";
         }
 
-        model.addAttribute("showtime", optionalShowtime.get());
+        Showtime showtime = optionalShowtime.get();
+
+        // Kiểm tra xem suất chiếu có thuộc cinema hiện tại không
+        if (showtime.getRoom() == null || showtime.getRoom().getCinema() == null ||
+                !showtime.getRoom().getCinema().getCinemaId().equals(cinemaId)) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền sửa suất chiếu này!");
+            return "redirect:/admin/showtimes";
+        }
+
+        model.addAttribute("showtime", showtime);
         model.addAttribute("movies", movieRepo.findAll());
-        model.addAttribute("rooms", roomRepo.findAll());
+        // Chỉ lấy phòng của cinema này
+        model.addAttribute("rooms", roomRepo.findByCinema_CinemaId(cinemaId));
         return "edit_showtime";
     }
 
     // CẬP NHẬT
     @PostMapping("/update")
     public String updateShowtime(Showtime showtime,
-                                 RedirectAttributes redirectAttributes) {
+                                 RedirectAttributes redirectAttributes,
+                                 HttpServletRequest request) {
+        // Kiểm tra authorization
+        Integer cinemaId = authorizationUtil.getCurrentUserCinemaId(request);
+        if (cinemaId == null) {
+            return "redirect:/login";
+        }
 
         if (showtime.getShowtimeId() == null || !showtimeRepo.existsById(showtime.getShowtimeId())) {
             redirectAttributes.addFlashAttribute("error", "Suất chiếu không tồn tại!");
+            return "redirect:/admin/showtimes";
+        }
+
+        // Lấy suất chiếu cũ để kiểm tra cinema
+        Showtime existingShowtime = showtimeRepo.findById(showtime.getShowtimeId()).orElse(null);
+        if (existingShowtime == null || existingShowtime.getRoom() == null || 
+                existingShowtime.getRoom().getCinema() == null ||
+                !existingShowtime.getRoom().getCinema().getCinemaId().equals(cinemaId)) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền cập nhật suất chiếu này!");
             return "redirect:/admin/showtimes";
         }
 
@@ -164,6 +225,13 @@ public class ShowtimeController {
 
         if (showtime.getRoom() == null || showtime.getRoom().getRoomId() == null) {
             redirectAttributes.addFlashAttribute("error", "Vui lòng chọn phòng!");
+            return "redirect:/admin/showtimes/edit/" + showtime.getShowtimeId();
+        }
+
+        // Kiểm tra xem phòng mới có thuộc cinema hiện tại không
+        Room newRoom = roomRepo.findById(showtime.getRoom().getRoomId()).orElse(null);
+        if (newRoom == null || newRoom.getCinema() == null || !newRoom.getCinema().getCinemaId().equals(cinemaId)) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không thể gán suất chiếu cho phòng này!");
             return "redirect:/admin/showtimes/edit/" + showtime.getShowtimeId();
         }
 
@@ -204,27 +272,74 @@ public class ShowtimeController {
     // XÓA
     @GetMapping("/delete/{id}")
     public String deleteShowtime(@PathVariable Integer id,
-                                 RedirectAttributes redirectAttributes) {
+                                 RedirectAttributes redirectAttributes,
+                                 HttpServletRequest request) {
+        // Kiểm tra authorization
+        Integer cinemaId = authorizationUtil.getCurrentUserCinemaId(request);
+        if (cinemaId == null) {
+            return "redirect:/login";
+        }
 
         if (!showtimeRepo.existsById(id)) {
             redirectAttributes.addFlashAttribute("error", "Suất chiếu không tồn tại!");
             return "redirect:/admin/showtimes";
         }
 
-        showtimeRepo.deleteById(id);
-        redirectAttributes.addFlashAttribute("message", "Xóa suất chiếu thành công!");
-        return "redirect:/admin/showtimes";
+        // Kiểm tra xem suất chiếu có thuộc cinema hiện tại không
+        Showtime showtime = showtimeRepo.findById(id).orElse(null);
+        if (showtime == null || showtime.getRoom() == null || showtime.getRoom().getCinema() == null ||
+                !showtime.getRoom().getCinema().getCinemaId().equals(cinemaId)) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xóa suất chiếu này!");
+            return "redirect:/admin/showtimes";
+        }
+
+        try {
+            // Check if there are any bookings for this showtime
+            List<Booking> bookings = bookingRepo.findByShowtime_ShowtimeId(id);
+            if (!bookings.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Không thể xóa suất chiếu có " + bookings.size() + " vé đã đặt!");
+                return "redirect:/admin/showtimes";
+            }
+
+            // Delete related seat status records
+            List<SeatStatus> seatStatuses = seatStatusRepo.findByShowtime_ShowtimeId(id);
+            if (!seatStatuses.isEmpty()) {
+                seatStatusRepo.deleteAll(seatStatuses);
+            }
+
+            // Delete the showtime
+            showtimeRepo.deleteById(id);
+            redirectAttributes.addFlashAttribute("message", "Xóa suất chiếu thành công!");
+            return "redirect:/admin/showtimes";
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi xóa suất chiếu: " + e.getMessage());
+            return "redirect:/admin/showtimes";
+        }
     }
 
     @GetMapping("/{showtimeId}/seats")
     public String showtimeSeatsPage(@PathVariable Integer showtimeId,
                                     Model model,
-                                    RedirectAttributes redirectAttributes) {
+                                    RedirectAttributes redirectAttributes,
+                                    HttpServletRequest request) {
+        // Kiểm tra authorization
+        Integer cinemaId = authorizationUtil.getCurrentUserCinemaId(request);
+        if (cinemaId == null) {
+            return "redirect:/login";
+        }
 
         Showtime showtime = showtimeRepo.findById(showtimeId).orElse(null);
 
         if (showtime == null) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy suất chiếu!");
+            return "redirect:/admin/showtimes";
+        }
+
+        // Kiểm tra xem suất chiếu có thuộc cinema hiện tại không
+        if (showtime.getRoom() == null || showtime.getRoom().getCinema() == null ||
+                !showtime.getRoom().getCinema().getCinemaId().equals(cinemaId)) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xem ghế của suất chiếu này!");
             return "redirect:/admin/showtimes";
         }
 

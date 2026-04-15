@@ -186,12 +186,12 @@
                                                 name="gender" type="radio" value="Nữ" required />
                                             <span class="text-sm font-medium">Nữ</span>
                                         </label>
-                                        <label
+                                        <!-- <label
                                             class="flex-1 flex items-center justify-center gap-2 bg-surface-container-low p-3.5 rounded-xl cursor-pointer hover:bg-surface-container-high transition-colors group">
                                             <input class="text-primary focus:ring-primary border-outline-variant"
                                                 name="gender" type="radio" value="Khác" required />
                                             <span class="text-sm font-medium">Khác</span>
-                                        </label>
+                                        </label> -->
                                     </div>
                                 </div>
                                 <div class="space-y-2">

@@ -1,18 +1,25 @@
 package com.example.btl_web.Service;
 
-import com.example.btl_web.DTO.BookingFilterDTO;
-import com.example.btl_web.Model.Booking;
-import com.example.btl_web.Repository.BookingRepo;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import com.example.btl_web.Model.Ticket;
-import com.example.btl_web.Repository.TicketRepo;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Service;
+
+import com.example.btl_web.DTO.BookingFilterDTO;
+import com.example.btl_web.Model.Booking;
+import com.example.btl_web.Model.Ticket;
+import com.example.btl_web.Repository.BookingDiscountRepo;
+import com.example.btl_web.Repository.BookingHistoryRepo;
+import com.example.btl_web.Repository.BookingRepo;
+import com.example.btl_web.Repository.BookingSeatRepo;
+import com.example.btl_web.Repository.EmailLogRepo;
+import com.example.btl_web.Repository.InvoiceRepo;
+import com.example.btl_web.Repository.PaymentRepo;
+import com.example.btl_web.Repository.TicketRepo;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -20,17 +27,28 @@ public class AdminBookingService {
 
     private final TicketRepo ticketRepo;
     private final BookingRepo bookingRepo;
+    private final BookingSeatRepo bookingSeatRepo;
+    private final BookingHistoryRepo bookingHistoryRepo;
+    private final BookingDiscountRepo bookingDiscountRepo;
+    private final InvoiceRepo invoiceRepo;
+    private final PaymentRepo paymentRepo;
+    private final EmailLogRepo emailLogRepo;
+    private final SeatService seatService;
 
     public List<Booking> filterBookingsForCinemaAdmin(BookingFilterDTO filterDTO, Integer cinemaId) {
         List<Booking> bookings = bookingRepo.findAll();
         return bookings.stream()
                 .filter(b -> Objects.equals(getCinemaId(b), cinemaId))
                 .filter(b -> {
-                    if (filterDTO.getMovieId() == null) return true;
+                    if (filterDTO.getMovieId() == null) {
+                        return true;
+                    }
                     return Objects.equals(getMovieId(b), filterDTO.getMovieId());
                 })
                 .filter(b -> {
-                    if (filterDTO.getShowDate() == null) return true;
+                    if (filterDTO.getShowDate() == null) {
+                        return true;
+                    }
                     return Objects.equals(getShowDate(b), filterDTO.getShowDate());
                 })
                 .filter(b -> {
@@ -46,14 +64,20 @@ public class AdminBookingService {
 
     public Booking getBookingByIdForCinemaAdmin(Integer bookingId, Integer cinemaId) {
         Booking booking = bookingRepo.findById(bookingId).orElse(null);
-        if (booking == null) return null;
-        if (!Objects.equals(getCinemaId(booking), cinemaId)) return null;
+        if (booking == null) {
+            return null;
+        }
+        if (!Objects.equals(getCinemaId(booking), cinemaId)) {
+            return null;
+        }
         return booking;
     }
 
     public boolean bookingBelongsToCinema(Integer bookingId, Integer cinemaId) {
         Booking booking = bookingRepo.findById(bookingId).orElse(null);
-        if (booking == null) return false;
+        if (booking == null) {
+            return false;
+        }
         return Objects.equals(getCinemaId(booking), cinemaId);
     }
 
@@ -100,9 +124,11 @@ public class AdminBookingService {
             return null;
         }
     }
+
     public Booking save(Booking booking) {
         return bookingRepo.save(booking);
     }
+
     public void confirmBookingAndVerifyTicket(Booking booking) {
         booking.setBookingStatus("CONFIRMED");
         bookingRepo.save(booking);
@@ -115,6 +141,16 @@ public class AdminBookingService {
     }
 
     public void cancelBookingAndUnverifyTicket(Booking booking) {
+        Integer showtimeId = booking.getShowtime() != null ? booking.getShowtime().getShowtimeId() : null;
+        if (showtimeId != null) {
+            bookingSeatRepo.findByBooking_BookingId(booking.getBookingId())
+                    .forEach(bookingSeat -> {
+                        if (bookingSeat.getSeat() != null) {
+                            seatService.setSeatStatus(bookingSeat.getSeat().getSeatId(), showtimeId, "AVAILABLE");
+                        }
+                    });
+        }
+
         booking.setBookingStatus("CANCELED");
         bookingRepo.save(booking);
 
@@ -123,5 +159,28 @@ public class AdminBookingService {
             ticket.setVerified(false);
             ticketRepo.save(ticket);
         }
+    }
+
+    public void deleteCanceledBooking(Booking booking) {
+        if (booking == null || booking.getBookingId() == null) {
+            throw new IllegalArgumentException("Booking không hợp lệ.");
+        }
+
+        String status = booking.getBookingStatus();
+        if (status == null || !"CANCELED".equalsIgnoreCase(status.trim())) {
+            throw new IllegalStateException("Chỉ được xóa booking ở trạng thái CANCELED.");
+        }
+
+        Integer bookingId = booking.getBookingId();
+
+        emailLogRepo.deleteAll(emailLogRepo.findByBooking_BookingIdOrderBySentTimeDesc(bookingId));
+        bookingHistoryRepo.deleteAll(bookingHistoryRepo.findByBooking_BookingId(bookingId));
+        bookingSeatRepo.deleteAll(bookingSeatRepo.findByBooking_BookingId(bookingId));
+        bookingDiscountRepo.deleteByBooking_BookingId(bookingId);
+        ticketRepo.deleteByBooking_BookingId(bookingId);
+        paymentRepo.deleteByBooking_BookingId(bookingId);
+        invoiceRepo.deleteByBooking_BookingId(bookingId);
+
+        bookingRepo.deleteById(bookingId);
     }
 }

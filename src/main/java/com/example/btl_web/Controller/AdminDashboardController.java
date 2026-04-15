@@ -24,7 +24,7 @@ public class AdminDashboardController {
     ReportService reportService;
 
     @GetMapping
-    public String dashboard(Model model){
+    public String dashboard(Model model) {
 
         model.addAttribute("cinemas", cinemaService.findAll());
 
@@ -36,6 +36,9 @@ public class AdminDashboardController {
 
         model.addAttribute("totalRevenue",
                 reportService.getTotalRevenue());
+
+        model.addAttribute("totalTickets",
+                reportService.getTotalTicketsSold());
 
         return "admin";
 

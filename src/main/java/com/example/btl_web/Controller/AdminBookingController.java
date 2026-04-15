@@ -1,20 +1,35 @@
 package com.example.btl_web.Controller;
 
-import com.example.btl_web.DTO.BookingFilterDTO;
-import com.example.btl_web.Model.*;
-import com.example.btl_web.Repository.*;
-import com.example.btl_web.Service.AdminBookingService;
-import com.example.btl_web.Service.EmailService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import javax.servlet.http.HttpSession;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.example.btl_web.DTO.BookingFilterDTO;
+import com.example.btl_web.Model.Admin;
+import com.example.btl_web.Model.Booking;
+import com.example.btl_web.Model.Cinema;
+import com.example.btl_web.Model.Movie;
+import com.example.btl_web.Model.Payment;
+import com.example.btl_web.Model.User;
+import com.example.btl_web.Repository.AdminRepo;
+import com.example.btl_web.Repository.CinemaRepo;
+import com.example.btl_web.Repository.MovieRepo;
+import com.example.btl_web.Repository.PaymentRepo;
+import com.example.btl_web.Service.AdminBookingService;
+import com.example.btl_web.Service.EmailService;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
@@ -27,13 +42,12 @@ public class AdminBookingController {
     private final AdminRepo adminRepo;
     private final EmailService emailService;
     private final PaymentRepo paymentRepo;
-    private final BookingRepo bookingRepo;
-    private final TicketRepo ticketRepo;
+
     @GetMapping
     public String showBookingList(@ModelAttribute("filter") BookingFilterDTO filterDTO,
-                                  Model model,
-                                  RedirectAttributes redirectAttributes,
-                                  HttpSession session) {
+            Model model,
+            RedirectAttributes redirectAttributes,
+            HttpSession session) {
         User currentUser = getCurrentUser(session);
         if (currentUser == null) {
             return "redirect:/login";
@@ -72,9 +86,9 @@ public class AdminBookingController {
 
     @GetMapping("/{id}")
     public String showBookingDetail(@PathVariable("id") Integer id,
-                                    Model model,
-                                    RedirectAttributes redirectAttributes,
-                                    HttpSession session) {
+            Model model,
+            RedirectAttributes redirectAttributes,
+            HttpSession session) {
         User currentUser = getCurrentUser(session);
         if (currentUser == null) {
             return "redirect:/login";
@@ -105,8 +119,8 @@ public class AdminBookingController {
 
     @PostMapping("/{id}/confirm")
     public String confirmBooking(@PathVariable("id") Integer id,
-                                 RedirectAttributes redirectAttributes,
-                                 HttpSession session) {
+            RedirectAttributes redirectAttributes,
+            HttpSession session) {
         if (!canAccessBooking(id, session)) {
             return "redirect:/login";
         }
@@ -119,6 +133,11 @@ public class AdminBookingController {
             return "redirect:/admin/bookings";
         }
 
+        if (booking.getBookingStatus() != null && "CANCELED".equalsIgnoreCase(booking.getBookingStatus().trim())) {
+            redirectAttributes.addFlashAttribute("errorMsg", "Đơn đã hủy không thể xác nhận. Bạn chỉ có thể xóa đơn này.");
+            return "redirect:/admin/bookings/" + id;
+        }
+
         adminBookingService.confirmBookingAndVerifyTicket(booking);
 
         redirectAttributes.addFlashAttribute("successMsg",
@@ -128,8 +147,8 @@ public class AdminBookingController {
 
     @PostMapping("/{id}/cancel")
     public String cancelBooking(@PathVariable("id") Integer id,
-                                RedirectAttributes redirectAttributes,
-                                HttpSession session) {
+            RedirectAttributes redirectAttributes,
+            HttpSession session) {
         if (!canAccessBooking(id, session)) {
             return "redirect:/login";
         }
@@ -150,10 +169,43 @@ public class AdminBookingController {
         return "redirect:/admin/bookings/" + id;
     }
 
+    @PostMapping("/{id}/delete")
+    public String deleteCanceledBooking(@PathVariable("id") Integer id,
+            RedirectAttributes redirectAttributes,
+            HttpSession session) {
+        if (!canAccessBooking(id, session)) {
+            return "redirect:/login";
+        }
+
+        Booking booking = adminBookingService.getBookingByIdForCinemaAdmin(
+                id, getManagedCinemaId(getCurrentUser(session))
+        );
+
+        if (booking == null) {
+            redirectAttributes.addFlashAttribute("errorMsg", "Không tìm thấy booking.");
+            return "redirect:/admin/bookings";
+        }
+
+        if (booking.getBookingStatus() == null || !"CANCELED".equalsIgnoreCase(booking.getBookingStatus().trim())) {
+            redirectAttributes.addFlashAttribute("errorMsg", "Chỉ được xóa booking ở trạng thái CANCELED.");
+            return "redirect:/admin/bookings/" + id;
+        }
+
+        try {
+            adminBookingService.deleteCanceledBooking(booking);
+            redirectAttributes.addFlashAttribute("successMsg", "Đã xóa đơn vé đã hủy thành công.");
+            return "redirect:/admin/bookings";
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMsg", "Xóa đơn thất bại: " + e.getMessage());
+            return "redirect:/admin/bookings/" + id;
+        }
+    }
+
     @PostMapping("/{id}/send-mail")
     public String sendMailOnly(@PathVariable("id") Integer id,
-                               RedirectAttributes redirectAttributes,
-                               HttpSession session) {
+            RedirectAttributes redirectAttributes,
+            HttpSession session) {
         if (!canAccessBooking(id, session)) {
             return "redirect:/login";
         }
@@ -208,8 +260,8 @@ public class AdminBookingController {
 
     private User getCurrentUser(HttpSession session) {
         Object obj = session.getAttribute("currentUser");
-        if (obj instanceof User) {
-            return (User) obj;
+        if (obj instanceof User user) {
+            return user;
         }
         return null;
     }
