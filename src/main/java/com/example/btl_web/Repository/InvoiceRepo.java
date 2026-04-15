@@ -19,31 +19,31 @@ public interface InvoiceRepo extends JpaRepository<Invoice, Integer> {
     Double totalRevenue();
 
     // Lấy doanh thu theo ngày
-    @Query(value = "SELECT DATE(i.invoice_date) as date, SUM(i.amount) as revenue "
+    @Query(value = "SELECT DATE(i.created_at) as date, SUM(i.amount) as revenue "
             + "FROM invoices i INNER JOIN payments p ON p.booking_id = i.booking_id "
-            + "GROUP BY DATE(i.invoice_date) "
+            + "GROUP BY DATE(i.created_at) "
             + "ORDER BY date DESC", nativeQuery = true)
     List<Object[]> getRevenueByDay();
 
     // Lấy doanh thu theo tháng
-    @Query(value = "SELECT YEAR(i.invoice_date) as year, MONTH(i.invoice_date) as month, SUM(i.amount) as revenue "
+    @Query(value = "SELECT YEAR(i.created_at) as year, MONTH(i.created_at) as month, SUM(i.amount) as revenue "
             + "FROM invoices i INNER JOIN payments p ON p.booking_id = i.booking_id "
-            + "GROUP BY YEAR(i.invoice_date), MONTH(i.invoice_date) "
+            + "GROUP BY YEAR(i.created_at), MONTH(i.created_at) "
             + "ORDER BY year DESC, month DESC", nativeQuery = true)
     List<Object[]> getRevenueByMonth();
 
     // Lấy doanh thu theo năm
-    @Query(value = "SELECT YEAR(i.invoice_date) as year, SUM(i.amount) as revenue "
+    @Query(value = "SELECT YEAR(i.created_at) as year, SUM(i.amount) as revenue "
             + "FROM invoices i INNER JOIN payments p ON p.booking_id = i.booking_id "
-            + "GROUP BY YEAR(i.invoice_date) "
+            + "GROUP BY YEAR(i.created_at) "
             + "ORDER BY year DESC", nativeQuery = true)
     List<Object[]> getRevenueByYear();
 
     // Lấy doanh thu trong khoảng thời gian cụ thể
-    @Query(value = "SELECT DATE(i.invoice_date) as date, SUM(i.amount) as revenue "
+    @Query(value = "SELECT DATE(i.created_at) as date, SUM(i.amount) as revenue "
             + "FROM invoices i INNER JOIN payments p ON p.booking_id = i.booking_id "
-            + "AND DATE(i.invoice_date) BETWEEN :startDate AND :endDate "
-            + "GROUP BY DATE(i.invoice_date) "
+            + "AND DATE(i.created_at) BETWEEN :startDate AND :endDate "
+            + "GROUP BY DATE(i.created_at) "
             + "ORDER BY date DESC", nativeQuery = true)
     List<Object[]> getRevenueByDateRange(@Param("startDate") String startDate, @Param("endDate") String endDate);
 
